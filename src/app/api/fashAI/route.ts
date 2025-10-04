@@ -1,20 +1,11 @@
-import fs from 'fs';
-import fetch from 'node-fetch';
-import FormData from 'form-data';
-import open from 'open';
+import { NextRequest, NextResponse } from "next/server";
 
-// === CONFIG ===
-const FASHN_API_KEY = process.env.FASHN_API_KEY!
-const IMGBB_API_KEY = process.env.IMGBB_API_KEY!
-const MODEL_IMAGE_PATH = "Images/caiden.jpeg";
-const GARMENT_IMAGE_PATH = "Images/dress.jpg";
+const FASHN_API_KEY = process.env.FASHN_API_KEY!;
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY!;
 const BASE_URL = "https://api.fashn.ai/v1";
 
-// === Type Definitions ===
 type ImgBBResponse = {
-  data: {
-    url: string;
-  };
+  data: { url: string };
 };
 
 type FashnJobResponse = {
@@ -26,108 +17,82 @@ type FashnStatusResponse = {
   id: string;
   status: "pending" | "completed" | "failed";
   output?: string[];
-  error?: {
-    name: string;
-    message: string;
-  };
+  error?: { name: string; message: string };
 };
 
-// === Upload image to ImgBB ===
-async function uploadToImgBB(imagePath: string): Promise<string | null> {
-  const form = new FormData();
+async function uploadToImgBB(fileBase64: string): Promise<string | null> {
+  const form = new URLSearchParams();
   form.append("key", IMGBB_API_KEY);
-  form.append("image", fs.createReadStream(imagePath));
+  form.append("image", fileBase64);
 
-  try {
-    const response = await fetch("https://api.imgbb.com/1/upload", {
-      method: "POST",
-      body: form,
-    });
+  const res = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    body: form,
+  });
 
-    const data = (await response.json()) as ImgBBResponse;
-
-    if (response.ok && data.data?.url) {
-      console.log(`✅ Uploaded ${imagePath} to ImgBB: ${data.data.url}`);
-      return data.data.url;
-    } else {
-      console.error(`❌ Failed to upload ${imagePath}:`, data);
-      return null;
-    }
-  } catch (error) {
-    console.error(`❌ Upload error for ${imagePath}:`, error);
-    return null;
-  }
+  const data = (await res.json()) as ImgBBResponse;
+  return data.data?.url || null;
 }
 
-// === Run Try-On Flow ===
-async function runTryOn() {
-  const modelUrl = await uploadToImgBB(MODEL_IMAGE_PATH);
-  const garmentUrl = await uploadToImgBB(GARMENT_IMAGE_PATH);
+export async function POST(req: NextRequest) {
+  const { modelImage, garmentImage } = await req.json();
 
-  if (!modelUrl || !garmentUrl) {
-    console.error("❌ Could not upload one or both images.");
-    return;
+  if (!modelImage || !garmentImage) {
+    return NextResponse.json({ error: "Missing images" }, { status: 400 });
   }
 
-  const payload = {
-    model_name: "tryon-v1.6",
-    inputs: {
-      model_image: modelUrl,
-      garment_image: garmentUrl,
-    },
-  };
-
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${FASHN_API_KEY}`,
-  };
-
   try {
-    const res = await fetch(`${BASE_URL}/run`, {
+    const modelUrl = await uploadToImgBB(modelImage);
+    const garmentUrl = await uploadToImgBB(garmentImage);
+
+    if (!modelUrl || !garmentUrl) {
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    }
+
+    const jobPayload = {
+      model_name: "tryon-v1.6",
+      inputs: {
+        model_image: modelUrl,
+        garment_image: garmentUrl,
+      },
+    };
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${FASHN_API_KEY}`,
+    };
+
+    const jobRes = await fetch(`${BASE_URL}/run`, {
       method: "POST",
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(jobPayload),
     });
 
-    const jobData = (await res.json()) as FashnJobResponse;
+    const jobData = (await jobRes.json()) as FashnJobResponse;
 
-    if (!res.ok || !jobData.id) {
-      console.error("❌ Failed to start try-on job:", jobData);
-      return;
+    if (!jobRes.ok || !jobData.id) {
+      return NextResponse.json({ error: "Job failed", detail: jobData }, { status: 500 });
     }
 
     const jobId = jobData.id;
-    console.log(`⏳ Job submitted! ID: ${jobId}`);
 
-    // === Poll for status
-    while (true) {
+    // Polling loop (max 30s timeout)
+    const maxTries = 10;
+    for (let i = 0; i < maxTries; i++) {
       const statusRes = await fetch(`${BASE_URL}/status/${jobId}`, { headers });
       const statusData = (await statusRes.json()) as FashnStatusResponse;
 
-      const status = statusData.status;
-      console.log(`Status: ${status}`);
-
-      if (status === "completed") {
-        const output = statusData.output;
-        if (Array.isArray(output) && output.length > 0) {
-          const outputUrl = output[0];
-          console.log("✅ Output image:", outputUrl);
-          await open(outputUrl);
-        } else {
-          console.warn("⚠️ Output malformed or missing.");
-        }
-        break;
-      } else if (status === "failed") {
-        console.error("❌ Job failed. Error:", statusData.error);
-        break;
+      if (statusData.status === "completed") {
+        return NextResponse.json({ output: statusData.output?.[0] });
+      } else if (statusData.status === "failed") {
+        return NextResponse.json({ error: "Job failed", detail: statusData.error }, { status: 500 });
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3s
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     }
+
+    return NextResponse.json({ error: "Timeout: Job not completed in time" }, { status: 504 });
   } catch (err) {
-    console.error("❌ Unexpected error during try-on process:", err);
+    return NextResponse.json({ error: "Unexpected error", detail: String(err) }, { status: 500 });
   }
 }
-
-// === Start ===
-runTryOn();
