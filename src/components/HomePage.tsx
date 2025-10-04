@@ -4,7 +4,7 @@ import {HistoryPanel, HistoryPhoto} from "../components/HistoryPanel";
 import Mirror from "../components/Mirror";
 import SuggestionList from "../components/SuggestionList";
 import MirrorWithWebcam from "../components/MirrorWithWebcam";
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Star } from "lucide-react";
@@ -93,6 +93,28 @@ export default function Home() {
   const [suggestions, setSuggestions] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Use ref to always have current value
+  const uploadedImageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    uploadedImageRef.current = uploadedImage;
+  }, [uploadedImage]);
+
+  // Wrapper function to debug state updates
+  const handleImageUpload = (image: string | null) => {
+    console.log("handleImageUpload called with:", image?.substring(0, 50));
+    console.log("Image length:", image?.length);
+    setUploadedImage(image);
+    uploadedImageRef.current = image;
+    console.log("setUploadedImage called");
+  };
+
+  // Debug: log whenever uploadedImage changes
+  React.useEffect(() => {
+    console.log("uploadedImage state changed to:", uploadedImage?.substring(0, 50));
+    console.log("uploadedImage length:", uploadedImage?.length);
+  }, [uploadedImage]);
+
   // Load initial results on mount
   React.useEffect(() => {
     handleSearch('clothing');
@@ -130,40 +152,113 @@ export default function Home() {
       setLoading(false);
     }
   };
-  const handleItemDrop = async (item: ClothingItem) => {
-    console.log("handleItemDrop -> uploadedImage:", uploadedImage);
-    if (!uploadedImage || uploadedImage.trim() === "") {
-      console.log("Uploaded Image in handleItemDrop:", uploadedImage);
+  const handleItemDrop = useCallback(async (item: ClothingItem) => {
+    // Use ref to get current value
+    const currentImage = uploadedImageRef.current;
 
+    console.log("handleItemDrop -> uploadedImage from ref:", currentImage);
+    console.log("uploadedImage type:", typeof currentImage);
+    console.log("uploadedImage length:", currentImage?.length);
+    console.log("uploadedImage starts with:", currentImage?.substring(0, 50));
+
+    if (!currentImage || currentImage === "" || currentImage === null) {
+      console.log("Uploaded Image in handleItemDrop:", currentImage);
       alert("Please upload or take a photo first!");
       return;
     }
 
     // Only allow one item at a time
     setDroppedItem(item);
+    setLoading(true);
 
     try {
+      // Convert clothing item URL to base64 if it's a URL
+      let garmentImage = item.image;
+      if (item.image && item.image.startsWith('http')) {
+        console.log("Fetching garment image from URL:", item.image);
+        try {
+          // Try to fetch with cors mode
+          const imgResponse = await fetch(item.image, { mode: 'cors' });
+          if (!imgResponse.ok) {
+            throw new Error(`Failed to fetch image: ${imgResponse.status}`);
+          }
+          const blob = await imgResponse.blob();
+          console.log("Blob type:", blob.type);
+
+          // Convert AVIF/unsupported formats to JPEG using canvas
+          if (blob.type === 'image/avif' || !blob.type || blob.type === 'application/octet-stream') {
+            console.log("Converting unsupported format to JPEG...");
+            garmentImage = await new Promise<string>((resolve) => {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(img, 0, 0);
+                  resolve(canvas.toDataURL('image/jpeg', 0.9));
+                }
+              };
+              img.src = URL.createObjectURL(blob);
+            });
+          } else {
+            // Use blob as-is for supported formats
+            garmentImage = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+          }
+          console.log("Garment image converted to base64, length:", garmentImage.length);
+          console.log("Garment image MIME type:", garmentImage.split(',')[0]);
+        } catch (fetchError) {
+          console.error("CORS error fetching garment image:", fetchError);
+          alert("Cannot fetch garment image due to CORS restrictions. The image needs to be downloaded server-side.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const response = await fetch("/api/fashAI", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          baseImage: uploadedImage,
-          clothing: item.image,
+          modelImage: currentImage,
+          garmentImage: garmentImage,
         }),
       });
 
       const data = await response.json();
 
-      // Update mirror with API generated image
-      setUploadedImage(data.generatedImageUrl);
+      if (data.error) {
+        console.error("API error:", data);
+        console.error("Error details:", JSON.stringify(data, null, 2));
+        alert(`Error: ${data.error}\n\nDetails: ${data.detail ? JSON.stringify(data.detail, null, 2) : 'No additional details'}`);
+        return;
+      }
 
-      // store in history 
-      setHistoryPhotos((prev) => [data.generatedImageUrl, ...prev])
+      // Update mirror with API generated image
+      if (data.output) {
+        setUploadedImage(data.output);
+        uploadedImageRef.current = data.output;
+        // store in history
+        const newPhoto: HistoryPhoto = {
+          id: Date.now().toString(),
+          imageUrl: data.output,
+          items: [item.name],
+          timestamp: Date.now(),
+        };
+        setHistoryPhotos((prev) => [newPhoto, ...prev]);
+      }
     } catch (error) {
       console.error("API failed:", error);
       alert("Something went wrong while generating image");
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   // const handleClearItems = () => {
   //   setDroppedItem(undefined);
@@ -249,9 +344,10 @@ return (
 
         <MirrorWithWebcam
           uploadedImage={uploadedImage}
-          onImageUpload={setUploadedImage}
+          onImageUpload={handleImageUpload}
           onItemDrop={handleItemDrop}
           droppedItem={droppedOneItem}
+          isProcessing={loading}
           // onClearItems={handleClearItems}
         />
       </div>

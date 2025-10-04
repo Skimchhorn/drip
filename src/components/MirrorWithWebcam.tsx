@@ -11,6 +11,7 @@ interface MirrorWithWebcamProps {
   onImageUpload: (image: string | null) => void;
   onItemDrop: (item: ClothingItem) => void;
   droppedItem?: ClothingItem;
+  isProcessing?: boolean;
   // onClearItems: () => void;
 }
 
@@ -19,6 +20,7 @@ export default function MirrorWithWebcam({
   onImageUpload,
   onItemDrop,
   droppedItem,
+  isProcessing = false,
   // onClearItems,
 }: MirrorWithWebcamProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,17 +96,27 @@ if (videoRef.current) {
   };
 
   const capturePhoto = () => {
+    console.log("capturePhoto called");
+    console.log("videoRef.current:", videoRef.current);
     if (videoRef.current) {
       const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
+      console.log("Canvas dimensions:", canvas.width, canvas.height);
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0);
         const imageData = canvas.toDataURL("image/png");
-        onImageUpload(imageData ?? null);
+        console.log("Image data created, length:", imageData.length);
+        console.log("Image data preview:", imageData.substring(0, 50));
+        console.log("Calling onImageUpload with imageData");
+        onImageUpload(imageData);
         stopWebcam();
+      } else {
+        console.error("Failed to get canvas context");
       }
+    } else {
+      console.error("videoRef.current is null");
     }
   };
 
@@ -203,6 +215,13 @@ if (videoRef.current) {
                   <p className="text-[#6b5d4f] text-xl bg-white/90 px-6 py-3 rounded-lg shadow-lg">
                     Drop item here!
                   </p>
+                </div>
+              )}
+         {isProcessing && (
+                <div className="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center backdrop-blur-sm z-50">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4"></div>
+                  <p className="text-white text-xl font-semibold">Trying on clothing...</p>
+                  <p className="text-white/80 text-sm mt-2">This may take 10-30 seconds</p>
                 </div>
               )}
         </div>

@@ -21,9 +21,16 @@ type FashnStatusResponse = {
 };
 
 async function uploadToImgBB(fileBase64: string): Promise<string | null> {
+  // Remove data:image/png;base64, prefix if present
+  const base64Data = fileBase64.includes(',')
+    ? fileBase64.split(',')[1]
+    : fileBase64;
+
   const form = new URLSearchParams();
   form.append("key", IMGBB_API_KEY);
-  form.append("image", fileBase64);
+  form.append("image", base64Data);
+
+  console.log('Uploading to ImgBB, base64 length:', base64Data.length);
 
   const res = await fetch("https://api.imgbb.com/1/upload", {
     method: "POST",
@@ -31,6 +38,12 @@ async function uploadToImgBB(fileBase64: string): Promise<string | null> {
   });
 
   const data = (await res.json()) as ImgBBResponse;
+  console.log('ImgBB response:', data);
+
+  if (!data.data?.url) {
+    console.error('ImgBB upload failed:', data);
+  }
+
   return data.data?.url || null;
 }
 
