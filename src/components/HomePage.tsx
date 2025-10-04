@@ -92,14 +92,33 @@ export default function Home() {
 ]);
   const [suggestions, setSuggestions] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Load initial results on mount
+  React.useEffect(() => {
+    handleSearch('clothing');
+  }, []);
+
   const handleSearch = async (query: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/searchClothes?q=${encodeURIComponent(query)}`);
+      const res = await fetch('/api/asos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchQuery: query, store: 'US' })
+      });
       const data = await res.json();
 
-      if (Array.isArray(data.items)) {
-        setSuggestions(data.items);
+      if (data.success && Array.isArray(data.products)) {
+        // Transform ASOS products to ClothingItem format
+        const items: ClothingItem[] = data.products.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          price: parseFloat(product.price.replace(/[^0-9.]/g, '')) || 0,
+          image: product.image,
+          url: product.url,
+          category: product.category || 'Clothing'
+        }));
+        setSuggestions(items);
       } else {
         console.error("Invalid data format:", data);
         setSuggestions([]);
@@ -253,18 +272,15 @@ return (
       <div className="absolute top-[140px] left-[1130px] right-[120px] w-[370px] mx-auto ">
           {/* Search Bar */}
           <SearchBar onSearch={handleSearch} />
-
-          {/* Suggestion List */}
-          {loading ? (
-            <p className="text-[#6b5d4f] text-center mt-4 italic">Searching...</p>
-          ) : (
-            <SuggestionList items={suggestions} />
-          )}
         </div>
 
       {/* Right Suggestions */}
       <div className="absolute top-[260px] left-[1130px] right-[120px] w-[400px] h-[300px] overflow-y-auto mx-auto">
-        <SuggestionList items={mockSuggestions} />
+        {loading ? (
+          <p className="text-[#6b5d4f] text-center mt-4 italic">Searching...</p>
+        ) : (
+          <SuggestionList items={suggestions} />
+        )}
       </div>
 
       {/* Process Button */}

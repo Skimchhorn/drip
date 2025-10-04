@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { useDrag } from 'react-dnd';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, ExternalLink } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ClothingItem } from "./HomePage"
 interface DraggableItemProps {
@@ -41,6 +41,19 @@ function DraggableItem({ item }: DraggableItemProps) {
         <p className="text-[#6b5d4f] truncate">{item.name}</p>
         <p className="text-[#b89968]">${item.price}</p>
       </div>
+
+      {item.url && (
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex-shrink-0 p-2 rounded-lg bg-[#b89968] hover:bg-[#a07d4d] text-white transition-colors"
+          title="View on ASOS"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      )}
     </div>
   );
 }
