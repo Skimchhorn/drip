@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Star } from "lucide-react";
+import SearchBar from "../components/SearchBar";
 // import Mirror from "../components/Mirror";
 
 export interface ClothingItem {
@@ -89,7 +90,27 @@ export default function Home() {
   "Colors match well",
   "Try experimenting with shoes for contrast",
 ]);
+  const [suggestions, setSuggestions] = useState<ClothingItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const handleSearch = async (query: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/searchClothes?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
 
+      if (Array.isArray(data.items)) {
+        setSuggestions(data.items);
+      } else {
+        console.error("Invalid data format:", data);
+        setSuggestions([]);
+      }
+    } catch (err) {
+      console.error("Search failed:", err);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleItemDrop = async (item: ClothingItem) => {
     console.log("handleItemDrop -> uploadedImage:", uploadedImage);
     if (!uploadedImage || uploadedImage.trim() === "") {
@@ -103,7 +124,7 @@ export default function Home() {
     setDroppedItem(item);
 
     try {
-      const response = await fetch("/api/generate", {
+      const response = await fetch("/api/fashAI", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -226,10 +247,20 @@ return (
                     disabled:cursor-not-allowed disabled:hover:scale-100 text-[22px] flex items-center justify-center overflow-hidden"
         >
           Process
-          {/* {droppedItems.length > 0 && ` (${droppedItems.length} items)`} */}
+         {/* {droppedItems.length > 0 && ` (${droppedItems.length} items)`} */}
         </button>
       </div>
+      <div className="absolute top-[140px] left-[1130px] right-[120px] w-[370px] mx-auto ">
+          {/* Search Bar */}
+          <SearchBar onSearch={handleSearch} />
 
+          {/* Suggestion List */}
+          {loading ? (
+            <p className="text-[#6b5d4f] text-center mt-4 italic">Searching...</p>
+          ) : (
+            <SuggestionList items={suggestions} />
+          )}
+        </div>
 
       {/* Right Suggestions */}
       <div className="absolute top-[260px] left-[1130px] right-[120px] w-[400px] h-[300px] overflow-y-auto mx-auto">

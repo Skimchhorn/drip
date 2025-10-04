@@ -4,8 +4,8 @@ import FormData from 'form-data';
 import open from 'open';
 
 // === CONFIG ===
-const FASHN_API_KEY = "fa-C0UgUN0pSbG8-DUarxlXHKT4nR6w3UM3FJUMG";
-const IMGBB_API_KEY = "93c8b70d3383fdd81adf93757f31e757";
+const FASHN_API_KEY = process.env.FASHN_API_KEY!
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY!
 const MODEL_IMAGE_PATH = "Images/caiden.jpeg";
 const GARMENT_IMAGE_PATH = "Images/dress.jpg";
 const BASE_URL = "https://api.fashn.ai/v1";
