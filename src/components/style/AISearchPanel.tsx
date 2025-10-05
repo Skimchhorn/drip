@@ -34,9 +34,10 @@ type AiSearchState = 'idle' | 'loading' | 'error' | 'success';
 interface AISearchPanelProps {
   onReferenceReplace: (imageUrl: string) => void;
   userImage?: string | null;
+  userImage?: string | null;
 }
 
-export function AISearchPanel({ onReferenceReplace, userImage }: AISearchPanelProps) {
+export function AISearchPanel({ onReferenceReplace, userImage, userImage }: AISearchPanelProps) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<AiSearchState>('idle');
   const [feedback, setFeedback] = useState('');
@@ -44,12 +45,15 @@ export function AISearchPanel({ onReferenceReplace, userImage }: AISearchPanelPr
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  async function getGeminiSuggestions(text: string, userImageUrl?: string | null): Promise<GeminiTextResponse> {
+  async function getGeminiSuggestions(text: string, userImageUrl?: string | null, userImageUrl?: string | null): Promise<GeminiTextResponse> {
     const response = await fetch('/api/gemini_keywords_from_text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+       
         text,
+        userImageUrl: userImageUrl || undefined
+     ,
         userImageUrl: userImageUrl || undefined
       }),
     });
