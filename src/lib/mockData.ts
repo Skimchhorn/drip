@@ -1,5 +1,6 @@
-import { StyleImage, Product } from './types';
+import { StyleImage, Product } from '@/lib/types';
 
+// Mock gallery images
 export const mockGalleryImages: StyleImage[] = [
   {
     id: '1',
@@ -83,6 +84,7 @@ export const mockGalleryImages: StyleImage[] = [
   },
 ];
 
+// Mock products for virtual try-on
 export const mockProducts: Product[] = [
   {
     id: 'p1',
@@ -158,9 +160,11 @@ export const mockProducts: Product[] = [
   },
 ];
 
+// Mock API function to simulate Gemini garment detection
 export const detectGarments = async (imageId: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
   return [
     { id: 'g1', type: 'top' as const, color: 'white', fit: 'slim', style: 'casual' },
     { id: 'g2', type: 'bottom' as const, color: 'blue', fit: 'regular', style: 'denim' },
@@ -169,8 +173,20 @@ export const detectGarments = async (imageId: string) => {
   ];
 };
 
+// Mock API function to simulate retail product search
 export const searchProducts = async (garmentType: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return mockProducts.filter(p => p.garmentType === garmentType);
+};
 
-  return mockProducts.filter((p) => p.garmentType === garmentType);
+// Mock API function to simulate virtual try-on
+export const performTryOn = async (userImageUrl: string, garmentImageUrl: string) => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Return the same user image as a placeholder
+  // In a real app, this would return the merged image
+  return userImageUrl;
 };
