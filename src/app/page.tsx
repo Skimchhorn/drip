@@ -26,27 +26,35 @@ export default function Home() {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
+        const allFetchedImages: StyleImage[] = [];
         const query = searchQuery.trim() || 'fashion';
-        const response = await fetch(`/api/style_search?q=${encodeURIComponent(query)}&num=100`);
-        const data = await response.json();
 
-        if (response.ok && data.images) {
-          const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-            id: `img-${index}`,
-            title: '',
-            imageUrl: img.url,
-            tags: [],
-            likes: 0,
-            isLiked: false,
-          }));
+        // Google Custom Search API allows max 10 results per request
+        // To get 100 images, make 10 requests with different start indices
+        for (let i = 0; i < 10; i++) {
+          const start = i * 10 + 1;
+          const response = await fetch(`/api/style_search?q=${encodeURIComponent(query)}&num=10&start=${start}`);
+          const data = await response.json();
 
-          console.log('Total images fetched:', transformedImages.length);
-          setAllImages(transformedImages);
-          // Load first batch
-          setDisplayedImages(transformedImages.slice(0, IMAGES_PER_BATCH));
-          setCurrentIndex(IMAGES_PER_BATCH);
-          console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', transformedImages.length);
+          if (response.ok && data.images) {
+            const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
+              id: `img-${start + index}`,
+              title: '',
+              imageUrl: img.url,
+              tags: [],
+              likes: 0,
+              isLiked: false,
+            }));
+            allFetchedImages.push(...transformedImages);
+          }
         }
+
+        console.log('Total images fetched:', allFetchedImages.length);
+        setAllImages(allFetchedImages);
+        // Load first batch
+        setDisplayedImages(allFetchedImages.slice(0, IMAGES_PER_BATCH));
+        setCurrentIndex(IMAGES_PER_BATCH);
+        console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', allFetchedImages.length);
       } catch (error) {
         console.error('Failed to fetch images:', error);
       } finally {
