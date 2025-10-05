@@ -10,6 +10,24 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
 
+/**
+ * Extracts fashion keywords from a garment image using Gemini AI.
+ *
+ * @param {NextRequest} req - The Next.js request object
+ * @param {string} req.query.imgURL - URL of the garment image to analyze
+ *
+ * @returns {NextResponse} JSON response
+ * @returns {Object} response.body - Parsed JSON object containing garment keywords
+ * @returns {string} response.body.garment_1 - Keywords for garment 1
+ * @returns {string} response.body.garment_2 - Keywords for garment 2
+ * @returns {string} response.body.garment_N - Keywords for garment N (up to 10)
+ *
+ * @example
+ * GET /api/gemini_keywords_from_image?imgURL=https://example.com/image.jpg
+ * Response: { "garment_1": "blue denim jacket casual", "garment_2": "...", ... }
+ *
+ * @throws {400} Invalid URL or processing error
+ */
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);

@@ -47,6 +47,25 @@ async function uploadToImgBB(fileBase64: string): Promise<string | null> {
   return data.data?.url || null;
 }
 
+/**
+ * Virtual try-on API using Fashn.ai to overlay a garment image onto a model image.
+ *
+ * @param {NextRequest} req - The Next.js request object
+ * @param {string} req.body.modelImage - Base64-encoded image of the model (with or without data URI prefix)
+ * @param {string} req.body.garmentImage - Base64-encoded image of the garment (with or without data URI prefix)
+ *
+ * @returns {NextResponse} JSON response
+ * @returns {string} response.body.output - URL of the generated try-on result image
+ *
+ * @example
+ * POST /api/fashAI
+ * Body: { "modelImage": "data:image/png;base64,...", "garmentImage": "data:image/png;base64,..." }
+ * Response: { "output": "https://result-image-url.com/image.png" }
+ *
+ * @throws {400} Missing modelImage or garmentImage
+ * @throws {500} Upload failed, job creation failed, or job execution failed
+ * @throws {504} Job timeout (exceeded 30 seconds)
+ */
 export async function POST(req: NextRequest) {
   const { modelImage, garmentImage } = await req.json();
 
