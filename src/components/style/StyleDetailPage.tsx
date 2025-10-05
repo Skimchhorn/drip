@@ -31,6 +31,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const [loadingProductId, setLoadingProductId] = useState<string | undefined>(undefined);
   const [shouldPulse, setShouldPulse] = useState(false);
   const [tryOnError, setTryOnError] = useState<string | null>(null);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const displayImage = tryOnResult ?? (userImage || null);
   const isTryOnInProgress = Boolean(loadingProductId);
@@ -54,6 +55,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
 
   const analyzeImage = async () => {
     setIsAnalyzing(true);
+    setIsLoadingProducts(true);
     try {
       console.log('Analyzing image:', selectedImage.imageUrl);
 
@@ -76,6 +78,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
       console.error('Error analyzing image:', error);
     } finally {
       setIsAnalyzing(false);
+      setIsLoadingProducts(false);
     }
   };
 
@@ -95,6 +98,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
 
     // Trigger garment search with the new reference image
     setIsAnalyzing(true);
+    setIsLoadingProducts(true);
     try {
       const result = await getGarmentSuggestionsFromImage(imageUrl);
 
@@ -112,6 +116,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
       console.error('Error analyzing new reference:', error);
     } finally {
       setIsAnalyzing(false);
+      setIsLoadingProducts(false);
     }
   };
 
@@ -285,17 +290,39 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
             <motion.div
               animate={shouldPulse ? { scale: [1, 1.02, 1] } : {}}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className={`transition-opacity duration-300 ${isAnalyzing ? 'opacity-30' : 'opacity-100'}`}
+              className="relative"
             >
-              {products.length > 0 && (
+              <div
+                className={`transition-opacity duration-300 ${
+                  isLoadingProducts || isAnalyzing ? 'opacity-30' : 'opacity-100'
+                }`}
+              >
+                {products.length > 0 && (
                   <Card className="p-6">
                     <h3 className="mb-4">Similar Garments</h3>
                     <ProductCarousel
                       products={products}
                       onTryOn={handleTryOn}
                       loadingProductId={loadingProductId}
-                  />
-                </Card>
+                    />
+                  </Card>
+                )}
+
+                {!isLoadingProducts && !isAnalyzing && products.length === 0 && (
+                  <Card className="p-10 text-center text-muted-foreground">
+                    <p>No garments detected for this look yet. Try asking AI for another style!</p>
+                  </Card>
+                )}
+              </div>
+
+              {(isLoadingProducts || isAnalyzing) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-background/75 backdrop-blur-sm text-center px-6">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="text-sm font-medium text-foreground">
+                    Styling 40 garments to match your vibe…
+                  </p>
+                  <p className="text-xs text-muted-foreground">Sit tight while we curate the perfect wardrobe.</p>
+                </div>
               )}
             </motion.div>
 
