@@ -188,6 +188,11 @@ Return a JSON object with this exact structure. Note the required format for \`g
         topP: 0.9,
         maxOutputTokens: 1024,
       },
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0, // Disables thinking
+        },
+      },
     });
 
     // Some SDK versions expose text directly; keep compatibility.
