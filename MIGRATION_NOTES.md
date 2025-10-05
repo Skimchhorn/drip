@@ -133,4 +133,4 @@ Route (app)                              Size  First Load JS
 1. Test runtime in browser: `npm run dev`
 2. Verify all interactive features: drag-drop, modals, carousels, masonry, theme switching
 3. Check API routes (if any are added to `src/app/api/`)
-4. Performance audit with Lighthouse
+
