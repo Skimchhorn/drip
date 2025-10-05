@@ -36,7 +36,7 @@ export function AnimatedButton({
       >
         {/* Animated gradient background */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-primary via-purple-600 to-primary bg-[length:200%_100%]"
+          className="absolute inset-0 bg-gradient-to-r from-accent via-accent-hover to-accent bg-[length:200%_100%]"
           animate={{
             backgroundPosition: loading ? ['0% 50%', '100% 50%'] : '0% 50%',
           }}
