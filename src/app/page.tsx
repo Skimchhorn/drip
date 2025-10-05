@@ -35,6 +35,7 @@ export default function Home() {
           setIsLoading(true);
           const allFetchedImages: StyleImage[] = [];
           const query = searchQuery.trim() || 'fashion';
+          const searchId = Date.now(); // Unique ID for this search to avoid key collisions
 
           // Start with fewer requests to avoid rate limiting
           // Make requests sequentially with delay to respect rate limits
@@ -49,7 +50,7 @@ export default function Home() {
 
               if (response.ok && data.images) {
                 const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-                  id: `img-${start + index}`,
+                  id: `${searchId}-img-${start + index}`,
                   title: img.title || 'Fashion Style',
                   imageUrl: img.url,
                   tags: ['fashion', 'style'],
