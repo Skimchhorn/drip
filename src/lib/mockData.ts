@@ -191,7 +191,49 @@ export const performTryOn = async (userImageUrl: string, garmentImageUrl: string
   return userImageUrl;
 };
 
-// Real API function: Get garment suggestions from style reference
+// New API function: Get garment suggestions from image URL
+export async function getGarmentSuggestionsFromImage(imageUrl: string): Promise<{
+  garment_keywords: Record<string, string>;
+  garment_results: Record<string, any[]>;
+}> {
+  // Step 1: Get keywords from Gemini
+  const keywordsResponse = await fetch('/api/gemini_keywords_from_image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imgURL: imageUrl }),
+  });
+
+  if (!keywordsResponse.ok) {
+    const errorData = await keywordsResponse.json();
+    throw new Error(`Failed to get keywords: ${errorData.error}`);
+  }
+
+  const garment_keywords = await keywordsResponse.json();
+
+  // Step 2: Search for each keyword (up to 10)
+  const garment_results: Record<string, any[]> = {};
+  const keywordEntries = Object.entries(garment_keywords).slice(0, 10);
+
+  // Search for 4 garments per keyword
+  await Promise.all(
+    keywordEntries.map(async ([key, keyword]) => {
+      const searchResponse = await fetch(`/api/garment_image_search?keyword=${encodeURIComponent(keyword as string)}&num=4`);
+      if (searchResponse.ok) {
+        const data = await searchResponse.json();
+        garment_results[key] = data.images || [];
+      } else {
+        garment_results[key] = [];
+      }
+    })
+  );
+
+  return {
+    garment_keywords,
+    garment_results,
+  };
+}
+
+// Legacy API function: Get garment suggestions from style reference (still uses old garment_search)
 export async function getGarmentSuggestionsFromStyle(styleReference: string): Promise<{
   score: string;
   feedback: any;

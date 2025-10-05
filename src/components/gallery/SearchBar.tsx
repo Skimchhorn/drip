@@ -10,7 +10,7 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
-    <div className="relative max-w-md w-full">
+    <div className="relative max-w-md w-full scale-125 origin-center">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
       <Input
         type="text"

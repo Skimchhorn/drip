@@ -146,16 +146,16 @@ export default function Home() {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             {/* Navigation Bar */}
-            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-              <div className="container mx-auto px-4 py-4">
-                <div className="flex items-center justify-between gap-4">
+            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-24">
+              <div className="container mx-auto px-4 h-full">
+                <div className="flex items-center justify-between gap-4 h-full">
                   {/* Logo */}
                   <div className="flex items-center gap-2">
                     <Image
                       src="/logo.png"
                       alt="Logo"
-                      width={80}
-                      height={80}
+                      width={240}
+                      height={240}
                       className="rounded-xl"
                     />
                   </div>

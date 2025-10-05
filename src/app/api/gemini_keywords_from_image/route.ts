@@ -1,7 +1,7 @@
 // src/app/api/keywords-from-image/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getGemini, promptFromImageForKeywords, fetchImageAsBase64, corsHeaders } from '@/lib/gemini';
-import { requireQueryParam, isValidUrl } from '@/lib/api-utils';
+import { isValidUrl } from '@/lib/api-utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ export async function OPTIONS() {
  * Extracts fashion keywords from a garment image using Gemini AI.
  *
  * @param {NextRequest} req - The Next.js request object
- * @param {string} req.query.imgURL - URL of the garment image to analyze
+ * @param {string} req.body.imgURL - URL of the garment image to analyze
  *
  * @returns {NextResponse} JSON response
  * @returns {Object} response.body - Parsed JSON object containing garment keywords
@@ -23,15 +23,24 @@ export async function OPTIONS() {
  * @returns {string} response.body.garment_N - Keywords for garment N (up to 10)
  *
  * @example
- * GET /api/gemini_keywords_from_image?imgURL=https://example.com/image.jpg
+ * POST /api/gemini_keywords_from_image
+ * Body: { "imgURL": "https://example.com/image.jpg" }
  * Response: { "garment_1": "blue denim jacket casual", "garment_2": "...", ... }
  *
  * @throws {400} Invalid URL or processing error
  */
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const imgURL = requireQueryParam(url, 'imgURL');
+    const body = await req.json();
+    const imgURL = body.imgURL;
+
+    if (!imgURL || typeof imgURL !== 'string') {
+      return NextResponse.json(
+        { error: 'Missing or invalid "imgURL" field in request body' },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
     if (!isValidUrl(imgURL)) {
       return NextResponse.json({ error: 'Invalid URL', details: 'Provide a valid imgURL' }, { status: 400, headers: corsHeaders() });
     }

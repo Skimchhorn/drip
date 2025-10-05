@@ -13,7 +13,7 @@ import { OutfitBuilder } from '@/components/style/OutfitBuilder';
 import { HistoryPanel } from '@/components/style/HistoryPanel';
 import { AnimatedButton } from '@/components/style/AnimatedButton';
 import { AISearchPanel } from '@/components/style/AISearchPanel';
-import { getGarmentSuggestionsFromStyle, convertGarmentResultsToProducts } from '@/lib/mockData';
+import { getGarmentSuggestionsFromImage, convertGarmentResultsToProducts } from '@/lib/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
 interface StyleDetailPageProps {
@@ -55,18 +55,13 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     try {
-      // Use the first tag as the style reference, or fallback to a generic style
-      const styleReference = (selectedImage.tags && selectedImage.tags.length > 0 && selectedImage.tags[0])
-        || selectedImage.title
-        || 'casual fashion';
+      console.log('Analyzing image:', selectedImage.imageUrl);
 
-      console.log('Analyzing with styleReference:', styleReference);
+      // Get garment suggestions from image using Gemini API
+      const result = await getGarmentSuggestionsFromImage(selectedImage.imageUrl);
 
-      // Get garment suggestions from Gemini API and Google Search
-      const result = await getGarmentSuggestionsFromStyle(styleReference);
-
-      // Set detected garments from the garment_suggestion object
-      const garmentList = Object.entries(result.garment_suggestion).map(([key, value]) => ({
+      // Set detected garments from the garment_keywords object
+      const garmentList = Object.entries(result.garment_keywords).map(([key, value]) => ({
         id: key,
         type: value,
         color: '',
@@ -98,13 +93,12 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
       imageUrl,
     });
 
-    // Trigger garment search with the new reference
+    // Trigger garment search with the new reference image
     setIsAnalyzing(true);
     try {
-      const styleReference = selectedImage.tags?.[0] || selectedImage.title || 'fashion';
-      const result = await getGarmentSuggestionsFromStyle(styleReference);
+      const result = await getGarmentSuggestionsFromImage(imageUrl);
 
-      const garmentList = Object.entries(result.garment_suggestion).map(([key, value]) => ({
+      const garmentList = Object.entries(result.garment_keywords).map(([key, value]) => ({
         id: key,
         type: value,
         color: '',
@@ -239,7 +233,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
                     animate={shouldPulse ? { scale: [1, 1.02, 1] } : {}}
                     transition={{ duration: 0.5 }}
                   >
-                    <p>Detected Items:</p>
+                    <p>Items from this style:</p>
                     <div className="flex flex-wrap gap-2">
                       {detectedGarments.map((g) => (
                         <Badge key={g.id} variant="outline">
