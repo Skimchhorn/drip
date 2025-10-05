@@ -90,8 +90,7 @@ export default function Home() {
   "Colors match well",
   "Try experimenting with shoes for contrast",
 ]);
-  const [suggestions, setSuggestions] = useState<ClothingItem[]>([]);
-  const [loading, setLoading] = useState(false);
+
 
   // Use ref to always have current value
   const uploadedImageRef = useRef<string | null>(null);
@@ -152,113 +151,40 @@ export default function Home() {
       setLoading(false);
     }
   };
-  const handleItemDrop = useCallback(async (item: ClothingItem) => {
-    // Use ref to get current value
-    const currentImage = uploadedImageRef.current;
+  const handleItemDrop = async (item: ClothingItem) => {
+    console.log("handleItemDrop -> uploadedImage:", uploadedImage);
+    if (!uploadedImage || uploadedImage.trim() === "") {
+      console.log("Uploaded Image in handleItemDrop:", uploadedImage);
 
-    console.log("handleItemDrop -> uploadedImage from ref:", currentImage);
-    console.log("uploadedImage type:", typeof currentImage);
-    console.log("uploadedImage length:", currentImage?.length);
-    console.log("uploadedImage starts with:", currentImage?.substring(0, 50));
-
-    if (!currentImage || currentImage === "" || currentImage === null) {
-      console.log("Uploaded Image in handleItemDrop:", currentImage);
       alert("Please upload or take a photo first!");
       return;
     }
 
     // Only allow one item at a time
     setDroppedItem(item);
-    setLoading(true);
 
     try {
-      // Convert clothing item URL to base64 if it's a URL
-      let garmentImage = item.image;
-      if (item.image && item.image.startsWith('http')) {
-        console.log("Fetching garment image from URL:", item.image);
-        try {
-          // Try to fetch with cors mode
-          const imgResponse = await fetch(item.image, { mode: 'cors' });
-          if (!imgResponse.ok) {
-            throw new Error(`Failed to fetch image: ${imgResponse.status}`);
-          }
-          const blob = await imgResponse.blob();
-          console.log("Blob type:", blob.type);
-
-          // Convert AVIF/unsupported formats to JPEG using canvas
-          if (blob.type === 'image/avif' || !blob.type || blob.type === 'application/octet-stream') {
-            console.log("Converting unsupported format to JPEG...");
-            garmentImage = await new Promise<string>((resolve) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                  ctx.drawImage(img, 0, 0);
-                  resolve(canvas.toDataURL('image/jpeg', 0.9));
-                }
-              };
-              img.src = URL.createObjectURL(blob);
-            });
-          } else {
-            // Use blob as-is for supported formats
-            garmentImage = await new Promise<string>((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(blob);
-            });
-          }
-          console.log("Garment image converted to base64, length:", garmentImage.length);
-          console.log("Garment image MIME type:", garmentImage.split(',')[0]);
-        } catch (fetchError) {
-          console.error("CORS error fetching garment image:", fetchError);
-          alert("Cannot fetch garment image due to CORS restrictions. The image needs to be downloaded server-side.");
-          setLoading(false);
-          return;
-        }
-      }
-
       const response = await fetch("/api/fashAI", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          modelImage: currentImage,
-          garmentImage: garmentImage,
+          baseImage: uploadedImage,
+          clothing: item.image,
         }),
       });
 
       const data = await response.json();
 
-      if (data.error) {
-        console.error("API error:", data);
-        console.error("Error details:", JSON.stringify(data, null, 2));
-        alert(`Error: ${data.error}\n\nDetails: ${data.detail ? JSON.stringify(data.detail, null, 2) : 'No additional details'}`);
-        return;
-      }
-
       // Update mirror with API generated image
-      if (data.output) {
-        setUploadedImage(data.output);
-        uploadedImageRef.current = data.output;
-        // store in history
-        const newPhoto: HistoryPhoto = {
-          id: Date.now().toString(),
-          imageUrl: data.output,
-          items: [item.name],
-          timestamp: Date.now(),
-        };
-        setHistoryPhotos((prev) => [newPhoto, ...prev]);
-      }
+      setUploadedImage(data.generatedImageUrl);
+
+      // store in history 
+      setHistoryPhotos((prev) => [data.generatedImageUrl, ...prev])
     } catch (error) {
       console.error("API failed:", error);
       alert("Something went wrong while generating image");
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  };
 
   // const handleClearItems = () => {
   //   setDroppedItem(undefined);
@@ -269,13 +195,7 @@ export default function Home() {
       alert("Please Upload Image");
       return;
     }
-    // const newPhoto: HistoryPhoto = {
-    //   id: Date.now().toString(),
-    //   imageUrl: uploadedImage,
-    //   items: droppedItems.map(item => item.name),
-    //   timestamp: Date.now(),
-    //   score: currentScore > 0 ? currentScore : undefined,
-    // };
+
   
     try {
     const response = await fetch("/api/analysis", {
