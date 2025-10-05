@@ -59,7 +59,6 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
     setIsLoadingProducts(true);
     try {
       console.log('Analyzing image:', selectedImage.imageUrl);
-
       // Get garment suggestions from image using Gemini API with progressive updates
       const result = await getGarmentSuggestionsFromImage(
         selectedImage.imageUrl,

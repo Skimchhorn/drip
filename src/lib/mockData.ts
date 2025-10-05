@@ -303,6 +303,7 @@ function extractStoreName(url: string): string {
   }
 }
 
+
 // Convert garment results to Product format
 export function convertGarmentResultsToProducts(garmentResults: Record<string, any[]>): Product[] {
   const products: Product[] = [];
