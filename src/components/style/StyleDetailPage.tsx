@@ -14,7 +14,7 @@ import { TryOnCanvas } from '@/components/style/TryOnCanvas';
 import { HistoryPanel } from '@/components/style/HistoryPanel';
 import { AnimatedButton } from '@/components/style/AnimatedButton';
 import { AIStylesColumn } from '@/components/style/AIStylesColumn';
-import { detectGarments, searchProducts, mockGalleryImages } from '@/lib/mockData';
+import { getGarmentSuggestionsFromStyle, convertGarmentResultsToProducts, mockGalleryImages } from '@/lib/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
 interface StyleDetailPageProps {
@@ -42,15 +42,28 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     try {
-      // Detect garments using Gemini API (mocked)
-      const garments = await detectGarments(selectedImage.id);
-      setDetectedGarments(garments);
+      // Use the first tag as the style reference, or fallback to a generic style
+      const styleReference = (selectedImage.tags && selectedImage.tags.length > 0 && selectedImage.tags[0])
+        || selectedImage.title
+        || 'casual fashion';
 
-      // Fetch products for each garment type
-      const allProducts = await Promise.all(
-        garments.map((g) => searchProducts(g.type))
-      );
-      setProducts(allProducts.flat());
+      console.log('Analyzing with styleReference:', styleReference);
+
+      // Get garment suggestions from Gemini API and Google Search
+      const result = await getGarmentSuggestionsFromStyle(styleReference);
+
+      // Set detected garments from the garment_suggestion object
+      const garmentList = Object.entries(result.garment_suggestion).map(([key, value]) => ({
+        id: key,
+        type: value,
+        color: '',
+        confidence: 1.0,
+      }));
+      setDetectedGarments(garmentList);
+
+      // Convert garment search results to Product format
+      const productList = convertGarmentResultsToProducts(result.garment_results);
+      setProducts(productList);
     } catch (error) {
       console.error('Error analyzing image:', error);
     } finally {

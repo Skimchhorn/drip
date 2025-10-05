@@ -39,10 +39,10 @@ export default function Home() {
           if (response.ok && data.images) {
             const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
               id: `img-${start + index}`,
-              title: '',
+              title: img.title || 'Fashion Style',
               imageUrl: img.url,
-              tags: [],
-              likes: 0,
+              tags: ['fashion', 'style'],
+              likes: Math.floor(Math.random() * 500),
               isLiked: false,
             }));
             allFetchedImages.push(...transformedImages);
