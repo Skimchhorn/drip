@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { CameraUpload } from '@/components/style/CameraUpload';
 import { ProductCarousel } from '@/components/style/ProductCarousel';
 import { OutfitBuilder } from '@/components/style/OutfitBuilder';
-import { TryOnCanvas } from '@/components/style/TryOnCanvas';
 import { HistoryPanel } from '@/components/style/HistoryPanel';
 import { AnimatedButton } from '@/components/style/AnimatedButton';
 import { AIStylesColumn } from '@/components/style/AIStylesColumn';
@@ -33,6 +32,20 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const [loadingProductId, setLoadingProductId] = useState<string | undefined>(undefined);
   const [shouldPulse, setShouldPulse] = useState(false);
   const [tryOnError, setTryOnError] = useState<string | null>(null);
+
+  const displayImage = tryOnResult ?? (userImage || null);
+
+  const handleUserImageCapture = (image: string) => {
+    setUserImage(image);
+    setTryOnResult(null);
+    setTryOnError(null);
+  };
+
+  const handleResetCapture = () => {
+    setUserImage('');
+    setTryOnResult(null);
+    setTryOnError(null);
+  };
 
   // Auto-analyze reference image on mount and when it changes
   useEffect(() => {
@@ -212,8 +225,15 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
             {/* Right Pane Container with horizontal layout on desktop */}
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Upload Your Photo Card (fixed width on desktop) */}
-              <div className="w-full lg:w-[360px] flex-shrink-0">
-                <CameraUpload onImageCapture={setUserImage} />
+              <div className="w-full lg:w-[360px] flex-shrink-0 space-y-2">
+                <CameraUpload
+                  image={displayImage}
+                  onImageCapture={handleUserImageCapture}
+                  onReset={handleResetCapture}
+                />
+                {tryOnError && (
+                  <p className="text-sm text-destructive">{tryOnError}</p>
+                )}
               </div>
 
               {/* AI Styles Column (fills remaining space) */}
@@ -241,15 +261,6 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
             </motion.div>
 
             {/* Try-On Canvas */}
-            {userImage && (
-              <div className="space-y-4">
-                <TryOnCanvas userImage={userImage} tryOnResult={tryOnResult} />
-                {tryOnError && (
-                  <p className="text-sm text-destructive">{tryOnError}</p>
-                )}
-              </div>
-            )}
-
             {/* Outfit Builder */}
             <OutfitBuilder availableProducts={products} />
 

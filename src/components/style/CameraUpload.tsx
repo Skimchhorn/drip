@@ -7,11 +7,12 @@ import { Card } from '@/components/ui/card';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
 interface CameraUploadProps {
+  image: string | null;
   onImageCapture: (imageUrl: string) => void;
+  onReset: () => void;
 }
 
-export function CameraUpload({ onImageCapture }: CameraUploadProps) {
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadProps) {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -28,8 +29,8 @@ export function CameraUpload({ onImageCapture }: CameraUploadProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setCapturedImage(result);
         onImageCapture(result);
+        setErrorMessage(null);
       };
       reader.readAsDataURL(file);
     }
@@ -42,7 +43,7 @@ export function CameraUpload({ onImageCapture }: CameraUploadProps) {
       videoRef.current.srcObject = null;
     }
     setIsCountingDown(false);
-    setCountdown(5);
+    setCountdown(3);
     setIsCameraActive(false);
   }, []);
 
@@ -57,9 +58,8 @@ export function CameraUpload({ onImageCapture }: CameraUploadProps) {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setCapturedImage(null);
       setIsCountingDown(false);
-      setCountdown(5);
+      setCountdown(3);
       streamRef.current = stream;
       setIsCameraActive(true);
     } catch (error) {
@@ -114,7 +114,6 @@ export function CameraUpload({ onImageCapture }: CameraUploadProps) {
     context.drawImage(video, 0, 0, width, height);
     const dataUrl = canvas.toDataURL('image/png');
 
-    setCapturedImage(dataUrl);
     onImageCapture(dataUrl);
     stopWebcam();
   }, [onImageCapture, stopWebcam]);
@@ -155,11 +154,11 @@ export function CameraUpload({ onImageCapture }: CameraUploadProps) {
       
       <div className="flex justify-start">
         <div className="w-full sm:max-w-xs">
-          {capturedImage ? (
+          {image ? (
             <div className="space-y-4">
               <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-muted">
                 <ImageWithFallback
-                  src={capturedImage}
+                  src={image}
                   alt="Captured"
                   className="w-full h-full object-cover"
                 />
@@ -167,7 +166,7 @@ export function CameraUpload({ onImageCapture }: CameraUploadProps) {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setCapturedImage(null);
+                  onReset();
                   setErrorMessage(null);
                 }}
                 className="w-full"
