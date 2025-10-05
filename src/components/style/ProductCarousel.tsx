@@ -6,12 +6,12 @@ import { Badge } from '../ui/badge';
 import { ExternalLink } from 'lucide-react';
 import { AnimatedButton } from './AnimatedButton';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 interface ProductCarouselProps {
   products: Product[];
   onTryOn: (product: Product) => void;
-  loadingProductId?: string;
+  loadingProductId?: string | null;
 }
 
 export function ProductCarousel({ products, onTryOn, loadingProductId }: ProductCarouselProps) {

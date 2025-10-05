@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { StyleImage, Product, TryOnHistory } from '../../lib/types';
 import { Button } from '../ui/button';
@@ -13,7 +13,8 @@ import { OutfitBuilder } from './OutfitBuilder';
 import { TryOnCanvas } from './TryOnCanvas';
 import { HistoryPanel } from './HistoryPanel';
 import { AnimatedButton } from './AnimatedButton';
-import { detectGarments, searchProducts, performTryOn } from '../../lib/mockData';
+import { AIStylesColumn } from './AIStylesColumn';
+import { detectGarments, searchProducts, performTryOn, mockGalleryImages } from '../../lib/mockData';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 
 interface StyleDetailPageProps {
@@ -21,7 +22,8 @@ interface StyleDetailPageProps {
   onBack: () => void;
 }
 
-export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps) {
+export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDetailPageProps) {
+  const [selectedImage, setSelectedImage] = useState<StyleImage>(initialImage);
   const [userImage, setUserImage] = useState<string>('');
   const [detectedGarments, setDetectedGarments] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,11 +31,12 @@ export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps)
   const [history, setHistory] = useState<TryOnHistory[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
+  const [shouldPulse, setShouldPulse] = useState(false);
 
-  // Auto-analyze reference image on mount
+  // Auto-analyze reference image on mount and when it changes
   useEffect(() => {
     analyzeImage();
-  }, []);
+  }, [selectedImage.id]);
 
   const analyzeImage = async () => {
     setIsAnalyzing(true);
@@ -52,6 +55,13 @@ export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps)
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleStyleSelect = (style: StyleImage) => {
+    setSelectedImage(style);
+    // Trigger pulse animation on detected items
+    setShouldPulse(true);
+    setTimeout(() => setShouldPulse(false), 1000);
   };
 
   const handleTryOn = async (product: Product) => {
@@ -108,17 +118,23 @@ export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps)
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Reference Image */}
+          {/* Left Column - Reference Image (unchanged) */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
               <h3 className="mb-4">Reference Look</h3>
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted mb-4">
+              <motion.div 
+                className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted mb-4"
+                key={selectedImage.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
                 <ImageWithFallback
                   src={selectedImage.imageUrl}
                   alt={selectedImage.title}
                   className="w-full h-full object-cover"
                 />
-              </div>
+              </motion.div>
               
               <div className="space-y-3">
                 <div>
@@ -138,7 +154,11 @@ export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps)
                     <p>Analyzing style...</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <motion.div 
+                    className="space-y-2"
+                    animate={shouldPulse ? { scale: [1, 1.02, 1] } : {}}
+                    transition={{ duration: 0.5 }}
+                  >
                     <p>Detected Items:</p>
                     <div className="flex flex-wrap gap-2">
                       {detectedGarments.map((g) => (
@@ -147,7 +167,7 @@ export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps)
                         </Badge>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 <AnimatedButton
@@ -160,21 +180,41 @@ export function StyleDetailPage({ selectedImage, onBack }: StyleDetailPageProps)
                 </AnimatedButton>
               </div>
             </Card>
+
           </div>
 
-          {/* Middle Column - Products & Canvas */}
+          {/* Right Pane - Upload & AI Styles */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Upload Section */}
-            <CameraUpload onImageCapture={setUserImage} />
+            {/* Right Pane Container with horizontal layout on desktop */}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Upload Your Photo Card (fixed width on desktop) */}
+              <div className="w-full lg:w-[360px] flex-shrink-0">
+                <CameraUpload onImageCapture={setUserImage} />
+              </div>
 
-            {/* Products */}
-            {products.length > 0 && (
-              <ProductCarousel
-                products={products}
-                onTryOn={handleTryOn}
-                loadingProductId={loadingProductId}
+              {/* AI Styles Column (fills remaining space) */}
+              <AIStylesColumn
+                availableStyles={mockGalleryImages}
+                onStyleSelect={handleStyleSelect}
               />
-            )}
+            </div>
+
+            {/* Similar Garments Section */}
+            <motion.div
+              animate={shouldPulse ? { scale: [1, 1.02, 1] } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              {products.length > 0 && (
+                <Card className="p-6">
+                  <h3 className="mb-4">Similar Garments</h3>
+                  <ProductCarousel
+                    products={products}
+                    onTryOn={handleTryOn}
+                    loadingProductId={loadingProductId}
+                  />
+                </Card>
+              )}
+            </motion.div>
 
             {/* Try-On Canvas */}
             {userImage && (

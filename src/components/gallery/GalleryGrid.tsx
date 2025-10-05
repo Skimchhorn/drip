@@ -29,18 +29,20 @@ export function GalleryGrid({ images, onImageClick, onLikeToggle }: GalleryGridP
         ))}
       </Masonry>
 
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          .masonry-grid {
-            column-count: 2 !important;
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media (max-width: 768px) {
+            .masonry-grid {
+              column-count: 2 !important;
+            }
           }
-        }
-        @media (min-width: 769px) and (max-width: 1024px) {
-          .masonry-grid {
-            column-count: 3 !important;
+          @media (min-width: 769px) and (max-width: 1024px) {
+            .masonry-grid {
+              column-count: 3 !important;
+            }
           }
-        }
-      `}</style>
+        `
+      }} />
     </div>
   );
 }

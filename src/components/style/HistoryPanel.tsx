@@ -7,7 +7,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { Download, Share2, Trash2 } from 'lucide-react';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import {
   Sheet,
   SheetContent,

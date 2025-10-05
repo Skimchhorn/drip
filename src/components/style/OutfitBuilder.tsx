@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useDrag, useDrop, DndProvider } from 'react-dnd';
+import { useState, useRef, useEffect } from 'react';
+// types in this workspace for react-dnd may mismatch package versions; ignore here
+// @ts-ignore
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Product, OutfitSlot } from '../../lib/types';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { ExternalLink, X } from 'lucide-react';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { motion } from 'motion/react';
+// motion not used here
 
 const GARMENT_TYPE_LABELS = {
   top: 'Top',
@@ -22,17 +24,25 @@ interface DraggableProductProps {
 }
 
 function DraggableProduct({ product }: DraggableProductProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'product',
     item: product,
-    collect: (monitor) => ({
+    collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
 
+  useEffect(() => {
+    if (ref.current && typeof drag === 'function') {
+      // attach the drag connector to the DOM node
+      drag(ref.current as unknown as Element);
+    }
+  }, [drag]);
+
   return (
     <div
-      ref={drag}
+      ref={ref}
       className={`cursor-move ${isDragging ? 'opacity-50' : 'opacity-100'}`}
     >
       <Card className="p-3">
@@ -56,21 +66,28 @@ interface DropSlotProps {
 }
 
 function DropSlot({ slot, onDrop, onRemove }: DropSlotProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'product',
-    drop: (item: Product) => {
+    drop: (item: Product, monitor: any) => {
       if (item.garmentType === slot.type) {
         onDrop(item);
       }
     },
-    collect: (monitor) => ({
+    collect: (monitor: any) => ({
       isOver: monitor.isOver(),
     }),
   }));
 
+  useEffect(() => {
+    if (ref.current && typeof drop === 'function') {
+      drop(ref.current as unknown as Element);
+    }
+  }, [drop]);
+
   return (
     <div
-      ref={drop}
+      ref={ref}
       className={`relative p-4 border-2 border-dashed rounded-2xl transition-all ${
         isOver ? 'border-primary bg-primary/10' : 'border-border'
       }`}

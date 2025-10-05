@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { StyleImage } from '../../lib/types';
 import { Badge } from '../ui/badge';
@@ -28,17 +28,18 @@ export function ImageCard({ image, onImageClick, onLikeToggle }: ImageCardProps)
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onImageClick(image)}
     >
-      <div className="relative overflow-hidden rounded-2xl bg-muted">
-        <motion.div
-          animate={{ scale: isHovered ? 1.1 : 1 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-        >
-          <ImageWithFallback
-            src={image.imageUrl}
-            alt={image.title}
-            className="w-full h-auto object-cover"
-          />
-        </motion.div>
+<div className="relative overflow-hidden rounded-2xl bg-muted">
+  <motion.div
+    animate={{ scale: isHovered ? 1.1 : 1 }}
+    transition={{ duration: 0.3, ease: 'easeInOut' }}
+    className="relative aspect-[3/4] overflow-hidden"
+  >
+    <ImageWithFallback
+      src={image.imageUrl}
+      alt={image.title}
+      className="absolute inset-0 w-full h-full object-cover"
+    />
+  </motion.div>
 
         {/* Overlay on hover */}
         <motion.div

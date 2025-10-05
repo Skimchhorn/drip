@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ASOSAPI } from '@/lib/api';
+import { ASOSAPI } from '@/components/lib/api';
 
 export async function POST(request: NextRequest) {
   try {

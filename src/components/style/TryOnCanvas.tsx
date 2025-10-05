@@ -6,7 +6,7 @@ import { Slider } from '../ui/slider';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TryOnCanvasProps {
   userImage: string;
