@@ -13,7 +13,7 @@ interface GalleryGridProps {
 export function GalleryGrid({ images, onImageClick, onLikeToggle }: GalleryGridProps) {
   return (
     <div className="px-4 md:px-8 py-8">
-      <SimpleGrid minItemWidth={150} gap={16} className="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <SimpleGrid minItemWidth={260} gap={16} className="grid-cols-2 md:grid-cols-4">
         {images.map((image) => (
           <ImageCard
             key={image.id}
