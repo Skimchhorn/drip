@@ -50,7 +50,7 @@ export default function Home() {
 
               if (response.ok && data.images) {
                 const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-                  id: `${searchId}-img-${start + index}`,
+                  id: `img-${start + index}`,
                   title: img.title || 'Fashion Style',
                   imageUrl: img.url,
                   tags: ['fashion', 'style'],
