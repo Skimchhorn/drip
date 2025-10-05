@@ -20,11 +20,11 @@ export function SearchButton({
     <Button
       onClick={onClick}
       disabled={disabled || loading}
-      className="w-44 h-12 rounded-2xl bg-primary text-primary-foreground text-base font-semibold hover:opacity-90 transition-all hover:shadow-lg"
+      className="px-6 h-12 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all hover:shadow-lg whitespace-nowrap"
     >
       {loading ? (
         <>
-          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           Searching
         </>
       ) : (

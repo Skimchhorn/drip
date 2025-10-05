@@ -62,6 +62,57 @@ ${keys}
 }
 
 /**
+ * 1b) Text + Optional User Image → feedback + style keywords (8 styles) with intelligent context
+ */
+export function promptFromTextWithUserContext(userText: string, opts: { styleCount: number }) {
+  const count = Math.max(1, Math.min(10, opts.styleCount || 8));
+  const keys = Array.from({ length: count }, (_, i) => `    "style_${i + 1}": "string - style keyword"`).join(',\n');
+
+  return `
+You are a professional fashion stylist and trend forecaster.
+
+CONTEXT:
+- The user may have uploaded a photo showing their current outfit (if image is provided)
+- The user's request is: "${userText}"
+
+Your goal:
+1. IF AN IMAGE IS PROVIDED:
+   - Analyze what the user is currently wearing (style, colors, fit, aesthetic, gender presentation)
+   - Determine if their text request is RELEVANT to their current outfit:
+     * RELEVANT: Queries like "what goes with this?", "suggest shoes for this", "help me accessorize", "improve this look"
+     * NOT DIRECTLY RELEVANT: Queries like "beach vacation outfits", "winter styles", "business casual looks" (general requests)
+   - If relevant: Reference their outfit in feedback and suggest complementary styles
+   - If not directly relevant: Use outfit as a hint for their general style preference, but focus on answering their specific request
+
+2. IF NO IMAGE IS PROVIDED:
+   - Respond to their text request with general style guidance
+
+3. Generate style keywords that match:
+   - Their specific request (primary priority)
+   - Their current style aesthetic if relevant (secondary context)
+   - Their apparent gender presentation if visible
+
+Return STRICT JSON ONLY in the following format:
+{
+  "feedback": "2-4 short, helpful sentences. If their query relates to their current outfit and image is provided, acknowledge what they're wearing. Otherwise, focus on their request with general style guidance.",
+  "style_keywords": {
+${keys}
+  }
+}
+
+### RULES:
+- Output exactly ${count} keyword entries (style_keywords.style_1 … style_${count}).
+- Each keyword value must be a concise style search term (1-4 words max).
+- Keywords should primarily address the user's TEXT REQUEST
+- If image is relevant to the query, let it inform gender/aesthetic direction
+- Examples: "minimal streetwear men", "business casual women", "athleisure", "summer casual", "beach vacation style"
+- Be intelligent about when to reference the outfit vs when to focus purely on their question
+- No markdown, no commentary, no backticks.
+- Return only the pure JSON object.
+`.trim();
+}
+
+/**
  * 2) Image → garments only (up to 10)
  */
 export function promptFromImageForKeywords(opts: { garmentCount: number }) {

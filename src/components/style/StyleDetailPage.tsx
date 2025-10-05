@@ -299,7 +299,10 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
 
               {/* AI Search Panel (fills remaining space) */}
               <div className="flex-1 min-w-0">
-                <AISearchPanel onReferenceReplace={handleReferenceReplace} />
+                <AISearchPanel
+                  onReferenceReplace={handleReferenceReplace}
+                  userImage={displayImage}
+                />
               </div>
             </div>
 
