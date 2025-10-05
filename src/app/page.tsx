@@ -152,7 +152,7 @@ export default function Home() {
                   {/* Logo */}
                   <div className="flex items-center gap-2">
                     <Image
-                      src="/logo.png"
+                      src="/logo-removebg-preview.png"
                       alt="Logo"
                       width={240}
                       height={240}

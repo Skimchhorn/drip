@@ -274,7 +274,9 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
               </div>
 
               {/* AI Search Panel (fills remaining space) */}
-              <AISearchPanel onReferenceReplace={handleReferenceReplace} />
+              <div className="flex-1 min-w-0">
+                <AISearchPanel onReferenceReplace={handleReferenceReplace} />
+              </div>
             </div>
 
             {/* Similar Garments Section */}
