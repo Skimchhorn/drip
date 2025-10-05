@@ -28,6 +28,7 @@ async function uploadToImgBB(fileBase64: string): Promise<string | null> {
 
   const form = new URLSearchParams();
   form.append("key", IMGBB_API_KEY);
+
   form.append("image", base64Data);
 
   console.log('Uploading to ImgBB, base64 length:', base64Data.length);
@@ -48,17 +49,38 @@ async function uploadToImgBB(fileBase64: string): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
-  const { modelImage, garmentImage } = await req.json();
+  const body = await req.json();
+
+  // Accept either modelImage/garmentImage (server) or baseImage/clothing (frontend)
+  const modelImage = body.modelImage ?? body.baseImage;
+  const garmentImage = body.garmentImage ?? body.clothing;
 
   if (!modelImage || !garmentImage) {
-    return NextResponse.json({ error: "Missing images" }, { status: 400 });
+    console.error('Missing images in request body:', { body });
+    return NextResponse.json({ error: "Missing images. Expected modelImage/baseImage and garmentImage/clothing." }, { status: 400 });
   }
 
   try {
-    const modelUrl = await uploadToImgBB(modelImage);
-    const garmentUrl = await uploadToImgBB(garmentImage);
+    // Helper: if the value is already an http(s) URL, use it directly, otherwise upload base64 to ImgBB
+    const uploadIfNeeded = async (val: string) => {
+      if (!val) return null;
+      const isUrl = /^https?:\/\//i.test(val);
+      if (isUrl) return val;
+      // otherwise assume base64/data URL and upload
+      try {
+        const uploaded = await uploadToImgBB(val);
+        return uploaded;
+      } catch (e) {
+        console.error('ImgBB upload error:', e);
+        return null;
+      }
+    };
+
+    const modelUrl = await uploadIfNeeded(modelImage);
+    const garmentUrl = await uploadIfNeeded(garmentImage);
 
     if (!modelUrl || !garmentUrl) {
+      console.error('Upload failed, modelUrl or garmentUrl missing', { modelUrl, garmentUrl });
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
@@ -96,7 +118,7 @@ export async function POST(req: NextRequest) {
       const statusData = (await statusRes.json()) as FashnStatusResponse;
 
       if (statusData.status === "completed") {
-        return NextResponse.json({ output: statusData.output?.[0] });
+        return NextResponse.json({ generatedImageUrl: statusData.output?.[0] });
       } else if (statusData.status === "failed") {
         return NextResponse.json({ error: "Job failed", detail: statusData.error }, { status: 500 });
       }

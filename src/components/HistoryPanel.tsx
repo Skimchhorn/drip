@@ -5,9 +5,7 @@ import { ClothingItem } from './HomePage';
 export interface HistoryPhoto {
   id: string;
   imageUrl: string  | undefined;
-  items: string[];
-  timestamp: number;
-  score?: number;
+
 }
 
 interface HistoryPhotosStackProps {
@@ -60,24 +58,30 @@ export function HistoryPanel({ photos, onRemove, onSelect }: HistoryPhotosStackP
               </div>
 
               {/* Info */}
-              <div className="p-3 bg-gradient-to-r from-[#e8dcc8] to-[#f5ebe0]">
+              <div className="p-3 bg-gradient-to-r from-[#e8dcc8] to-[#f5ebe0] rounded-lg shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-[#6b5d4f] text-sm">
-                      {photo.items.length} item{photo.items.length !== 1 ? 's' : ''}
-                    </p>
-                    <p className="text-[#8b7355] text-xs mt-1">
-                      {new Date(photo.timestamp).toLocaleString()}
-                    </p>
+                    {/* Safely display the image */}
+                    {photo.imageUrl ? (
+                      <img
+                        src={photo.imageUrl}
+                        alt="History preview"
+                        className="w-16 h-16 object-cover rounded-md border border-[#d8c8aa]"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-[#d8c8aa]/30 flex items-center justify-center text-[#6b5d4f] text-xs rounded-md">
+                        No Image
+                      </div>
+                    )}
                   </div>
-                  
-                  {photo.score !== undefined && (
-                    <div className="bg-[#b89968] text-white px-3 py-1 rounded-full text-sm">
-                      {photo.score}/10
-                    </div>
-                  )}
+
+                  {/* ID fallback */}
+                  <div className="ml-4 text-right">
+                    <p className="text-[#6b5d4f] text-xs font-medium">ID: {photo.id}</p>
+                  </div>
                 </div>
               </div>
+
 
               {/* Remove button */}
               <button

@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useRef, useState, useEffect }from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useDrop } from "react-dnd";
 import { Upload, Camera, X } from "lucide-react";
-import { ClothingItem }from "./HomePage"
-
+import { ClothingItem } from "./HomePage";
 
 interface MirrorWithWebcamProps {
   uploadedImage: string | null;
   onImageUpload: (image: string | null) => void;
   onItemDrop: (item: ClothingItem) => void;
   droppedItem?: ClothingItem;
-  isProcessing?: boolean;
   // onClearItems: () => void;
 }
 
@@ -20,7 +18,6 @@ export default function MirrorWithWebcam({
   onImageUpload,
   onItemDrop,
   droppedItem,
-  isProcessing = false,
   // onClearItems,
 }: MirrorWithWebcamProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +26,14 @@ export default function MirrorWithWebcam({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
+  // 🔁 Track image key for forced re-render
+  const [imageKey, setImageKey] = useState(0);
+
+  useEffect(() => {
+    setImageKey((prev) => prev + 1);
+  }, [uploadedImage]);
+
+  // 📦 React DnD Drop Zone
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "clothing-item",
     drop: (item: ClothingItem) => {
@@ -40,61 +45,85 @@ export default function MirrorWithWebcam({
   }));
   drop(dropRef);
 
+  // 🎥 Handle webcam stream
   useEffect(() => {
-  if (videoRef.current && stream) {
-    videoRef.current.srcObject = stream;
-    console.log("Reattached stream to video:", stream);
-  }
-}, [stream]);
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      console.log("Reattached stream to video:", stream);
+    }
+  }, [stream]);
 
+  // 🖼️ Handle file uploads
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-      const result = event.target?.result as string | null;
-      if (result) {
-        onImageUpload(result);
-      } else {
-        console.error("Image upload failed, result was null");
-      }
-      stopWebcam();
-    };
+        const result = event.target?.result as string | null;
+        if (result) {
+          onImageUpload(result);
+        } else {
+          console.error("Image upload failed, result was null");
+        }
+        // reset file input so selecting the same file again will trigger change
+        if (fileInputRef.current) {
+          try {
+            fileInputRef.current.value = "";
+          } catch (err) {
+            /* ignore in case browser prevents direct value set */
+          }
+        }
 
+        stopWebcam();
+      };
       reader.readAsDataURL(file);
     }
   };
 
-const startWebcam = async () => {
-  try {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false,
-    });
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
-if (videoRef.current) {
-  videoRef.current.srcObject = mediaStream;
-  console.log("Set srcObject:", videoRef.current.srcObject);
-}
+  // 📷 Start webcam
+  const startWebcam = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
 
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        console.log("Set srcObject:", videoRef.current.srcObject);
+      }
 
-    setStream(mediaStream);
-    setIsWebcamActive(true);
-  } catch (error) {
-    console.error("Error accessing webcam:", error);
-    alert("Unable to access webcam. Please check permissions.");
-  }
-};
+      setStream(mediaStream);
+      setIsWebcamActive(true);
+    } catch (error) {
+      console.error("Error accessing webcam:", error);
+      alert("Unable to access webcam. Please check permissions.");
+    }
+  };
 
-
+  // 🛑 Stop webcam
   const stopWebcam = () => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
       setIsWebcamActive(false);
     }
+    // clear video srcObject to avoid holding onto stopped stream
+    if (videoRef.current) {
+      try {
+        // @ts-ignore assignment to srcObject
+        videoRef.current.srcObject = null;
+      } catch (err) {
+        // ignore
+      }
+    }
   };
 
+  // 📸 Capture photo from webcam
   const capturePhoto = () => {
     console.log("capturePhoto called");
     console.log("videoRef.current:", videoRef.current);
@@ -120,9 +149,18 @@ if (videoRef.current) {
     }
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-
+  // 🧹 Remove uploaded image (clear file input too so same-file re-uploads work)
+  const handleRemoveImage = () => {
+    onImageUpload(null);
+    if (fileInputRef.current) {
+      try {
+        fileInputRef.current.value = "";
+      } catch (err) {
+        // ignore
+      }
+    }
+    // also stop webcam if somehow active
+    stopWebcam();
   };
 
   return (
@@ -132,25 +170,25 @@ if (videoRef.current) {
         isOver ? "scale-105" : ""
       }`}
     >
-      {/* Mirror surface */}
+      {/* Mirror Surface */}
       <div className="absolute inset-0 rounded-xl overflow-hidden shadow-lg">
         <div className="relative w-full h-full">
+          {/* --- Webcam View --- */}
           {isWebcamActive ? (
-            /* Webcam View */
-            <div >
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              onCanPlay={() => {
-                console.log("Video ready:", videoRef.current?.videoWidth, videoRef.current?.videoHeight);
-                videoRef.current?.play().catch((err) => console.error("Play failed:", err));
-              }}
-              className="absolute inset-0 w-full h-full object-cover z-20"
-            />
-
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-30">
+            <div>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                onCanPlay={() => {
+                  videoRef.current
+                    ?.play()
+                    .catch((err) => console.error("Play failed:", err));
+                }}
+                className="absolute inset-0 w-full h-full object-cover z-20"
+              />
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-30">
                 <button
                   onClick={capturePhoto}
                   className="bg-white hover:bg-gray-100 text-[#6b5d4f] px-6 py-3 rounded-full shadow-lg transition-all"
@@ -168,24 +206,23 @@ if (videoRef.current) {
               </div>
             </div>
           ) : uploadedImage ? (
-            <div className="relative w-full h-full">
+            /* --- Uploaded Image View --- */
+            <div key={imageKey} className="relative w-full h-full fade-in">
               <img
-                src={uploadedImage || ""}
+                key={imageKey}
+                src={uploadedImage ?? ""}
                 alt="Uploaded"
-                className="w-full h-full object-cover z-10"
+                className="w-full h-full object-cover z-10 transition-opacity duration-500 opacity-100"
               />
-                  <button
-                  onClick={() => {
-                    onImageUpload("");   // clear uploaded image
-                    // onClearItems();      // also clear dropped clothes
-                  }}
-                  className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 shadow-lg transition"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-
+              <button
+                onClick={handleRemoveImage}
+                className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 shadow-lg transition"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </div>
           ) : (
+            /* --- Default Upload UI --- */
             <div className="relative w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/30 via-transparent to-white/10">
               <div className="text-center space-y-6">
                 <div className="space-y-4">
@@ -196,9 +233,7 @@ if (videoRef.current) {
                     <Upload className="inline-block mr-2 w-5 h-5" />
                     UPLOAD IMAGE
                   </button>
-
                   <div className="text-[#8b7355]">or</div>
-
                   <button
                     onClick={startWebcam}
                     className="bg-white hover:bg-gray-50 text-[#6b5d4f] px-8 py-4 rounded-xl shadow-xl transition-all transform hover:scale-105 border-2 border-[#c4b5a0]"
@@ -217,16 +252,10 @@ if (videoRef.current) {
                   </p>
                 </div>
               )}
-         {isProcessing && (
-                <div className="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center backdrop-blur-sm z-50">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4"></div>
-                  <p className="text-white text-xl font-semibold">Trying on clothing...</p>
-                  <p className="text-white/80 text-sm mt-2">This may take 10-30 seconds</p>
-                </div>
-              )}
         </div>
       </div>
 
+      {/* Hidden File Input */}
       <input
         ref={fileInputRef}
         type="file"
