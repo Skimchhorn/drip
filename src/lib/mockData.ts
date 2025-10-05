@@ -214,18 +214,34 @@ export async function getGarmentSuggestionsFromImage(imageUrl: string): Promise<
   const garment_results: Record<string, any[]> = {};
   const keywordEntries = Object.entries(garment_keywords).slice(0, 10);
 
-  // Search for 4 garments per keyword
-  await Promise.all(
-    keywordEntries.map(async ([key, keyword]) => {
+  // Search for 4 garments per keyword - sequentially with delays to avoid rate limiting
+  for (let i = 0; i < keywordEntries.length; i++) {
+    const [key, keyword] = keywordEntries[i];
+
+    try {
       const searchResponse = await fetch(`/api/garment_image_search?keyword=${encodeURIComponent(keyword as string)}&num=4`);
+
       if (searchResponse.ok) {
         const data = await searchResponse.json();
         garment_results[key] = data.images || [];
+      } else if (searchResponse.status === 429) {
+        // Hit rate limit, stop making more requests
+        console.warn('Rate limit reached while fetching garments, stopping');
+        garment_results[key] = [];
+        break;
       } else {
         garment_results[key] = [];
       }
-    })
-  );
+
+      // Add delay between requests to respect rate limits (except for last request)
+      if (i < keywordEntries.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    } catch (error) {
+      console.error(`Failed to fetch garments for ${key}:`, error);
+      garment_results[key] = [];
+    }
+  }
 
   return {
     garment_keywords,

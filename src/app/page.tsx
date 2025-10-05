@@ -26,48 +26,71 @@ export default function Home() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const IMAGES_PER_BATCH = 20;
 
-  // Fetch all images from style_search endpoint
+  // Fetch all images from style_search endpoint with debouncing
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        setIsLoading(true);
-        const allFetchedImages: StyleImage[] = [];
-        const query = searchQuery.trim() || 'fashion';
+    // Debounce search - wait 500ms after user stops typing
+    const timeoutId = setTimeout(() => {
+      const fetchImages = async () => {
+        try {
+          setIsLoading(true);
+          const allFetchedImages: StyleImage[] = [];
+          const query = searchQuery.trim() || 'fashion';
 
-        // Google Custom Search API allows max 10 results per request
-        // To get 100 images, make 10 requests with different start indices
-        for (let i = 0; i < 10; i++) {
-          const start = i * 10 + 1;
-          const response = await fetch(`/api/style_search?q=${encodeURIComponent(query)}&num=10&start=${start}`);
-          const data = await response.json();
+          // Start with fewer requests to avoid rate limiting
+          // Make requests sequentially with delay to respect rate limits
+          const maxRequests = 3; // Reduced from 10 to 3
 
-          if (response.ok && data.images) {
-            const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-              id: `img-${start + index}`,
-              title: img.title || 'Fashion Style',
-              imageUrl: img.url,
-              tags: ['fashion', 'style'],
-              likes: Math.floor(Math.random() * 500),
-              isLiked: false,
-            }));
-            allFetchedImages.push(...transformedImages);
+          for (let i = 0; i < maxRequests; i++) {
+            const start = i * 10 + 1;
+
+            try {
+              const response = await fetch(`/api/style_search?q=${encodeURIComponent(query)}&num=10&start=${start}`);
+              const data = await response.json();
+
+              if (response.ok && data.images) {
+                const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
+                  id: `img-${start + index}`,
+                  title: img.title || 'Fashion Style',
+                  imageUrl: img.url,
+                  tags: ['fashion', 'style'],
+                  likes: Math.floor(Math.random() * 500),
+                  isLiked: false,
+                }));
+                allFetchedImages.push(...transformedImages);
+              } else if (response.status === 429) {
+                // Hit rate limit, stop making more requests
+                console.warn('Rate limit reached, stopping requests');
+                break;
+              }
+
+              // Add small delay between requests to avoid rate limiting
+              if (i < maxRequests - 1) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
+            } catch (error) {
+              console.error(`Failed to fetch batch ${i + 1}:`, error);
+              break;
+            }
           }
+
+          console.log('Total images fetched:', allFetchedImages.length);
+          setAllImages(allFetchedImages);
+          // Load first batch
+          setDisplayedImages(allFetchedImages.slice(0, IMAGES_PER_BATCH));
+          setCurrentIndex(IMAGES_PER_BATCH);
+          console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', allFetchedImages.length);
+        } catch (error) {
+          console.error('Failed to fetch images:', error);
+        } finally {
+          setIsLoading(false);
         }
+      };
 
-        console.log('Total images fetched:', allFetchedImages.length);
-        setAllImages(allFetchedImages);
-        // Load first batch
-        setDisplayedImages(allFetchedImages.slice(0, IMAGES_PER_BATCH));
-        setCurrentIndex(IMAGES_PER_BATCH);
-        console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', allFetchedImages.length);
-      } catch (error) {
-        console.error('Failed to fetch images:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      fetchImages();
+    }, 500); // Wait 500ms after user stops typing
 
-    fetchImages();
+    // Cleanup timeout if search query changes before timeout completes
+    return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
   const loadMoreImages = () => {
