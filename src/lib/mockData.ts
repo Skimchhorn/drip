@@ -185,8 +185,56 @@ export const searchProducts = async (garmentType: string) => {
 export const performTryOn = async (userImageUrl: string, garmentImageUrl: string) => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 2000));
-  
+
   // Return the same user image as a placeholder
   // In a real app, this would return the merged image
   return userImageUrl;
 };
+
+// Real API function: Get garment suggestions from style reference
+export async function getGarmentSuggestionsFromStyle(styleReference: string): Promise<{
+  score: string;
+  feedback: any;
+  ai_script: string;
+  garment_suggestion: Record<string, string>;
+  garment_results: Record<string, any[]>;
+}> {
+  const params = new URLSearchParams({
+    styleReference: styleReference,
+    num: '10',
+  });
+
+  const url = `/api/garment_search?${params.toString()}`;
+  console.log('Fetching:', url, 'with styleReference:', styleReference);
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('API Error:', errorData);
+    throw new Error(`Failed to fetch garment suggestions: ${errorData.error} - ${errorData.details}`);
+  }
+
+  return response.json();
+}
+
+// Convert garment results to Product format
+export function convertGarmentResultsToProducts(garmentResults: Record<string, any[]>): Product[] {
+  const products: Product[] = [];
+  let productId = 1;
+
+  for (const [key, images] of Object.entries(garmentResults)) {
+    for (const image of images) {
+      products.push({
+        id: `${key}-${productId++}`,
+        garmentType: key.replace('garment_', '') as 'top' | 'bottom' | 'outerwear' | 'shoes',
+        imageUrl: image.url,
+        brand: 'Online Store',
+        name: image.title || 'Garment',
+        price: Math.floor(Math.random() * 150) + 29.99, // Random price for now
+        retailerLink: image.pageUrl || '#',
+      });
+    }
+  }
+
+  return products;
+}
