@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const ai = getGemini();
     const prompt = promptFromText(text, { styleCount: 8 });
 
-    const result = await ai.models.generateContent({
+    const payload: any = {
       model: 'gemini-2.5-flash',
       contents: [{ text: prompt }],
       generationConfig: {
@@ -54,7 +54,9 @@ export async function POST(req: NextRequest) {
         maxOutputTokens: 512,
       },
       config: { thinkingConfig: { thinkingBudget: 0 } },
-    });
+    };
+
+    const result = await (ai as any).models.generateContent(payload);
 
     const raw = (result as any).text ?? (result as any).response?.text?.();
     const textOut = typeof raw === 'function' ? await raw() : raw;

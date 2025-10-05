@@ -148,25 +148,23 @@ export default function Home() {
             {/* Navigation Bar */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-24">
               <div className="container mx-auto px-4 h-full">
-                <div className="flex items-center justify-between gap-4 h-full">
+                <div className="relative flex items-center justify-center h-full">
                   {/* Logo */}
-                  <div className="flex items-center gap-2">
+                  <div className="absolute left-0 md:left-4 flex items-center">
                     <Image
                       src="/logo-removebg-preview.png"
                       alt="Logo"
-                      width={240}
-                      height={240}
+                      width={200}
+                      height={200}
                       className="rounded-xl"
+                      priority
                     />
                   </div>
 
                   {/* Search Bar */}
-                  <div className="flex-1 max-w-2xl">
+                  <div className="w-full max-w-3xl px-4 sm:px-0">
                     <SearchBar value={searchQuery} onChange={setSearchQuery} />
                   </div>
-
-                  {/* Filter */}
-                  <FilterDrawer />
                 </div>
               </div>
             </div>
