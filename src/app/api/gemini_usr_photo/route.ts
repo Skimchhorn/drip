@@ -140,10 +140,10 @@ Return a JSON object with this exact structure. Note the required format for \`g
     "ai_script": "string (conversational summary for text-to-speech)"
   },
   "garment_suggestion": {
-    "garment_1": "string in format 'description type gender', e.g. 'white t-shirt men'",
-    "garment_2": "string in format 'description type gender', e.g. 'dark wash jeans women'",
-    "garment_3": "string in format 'description type gender'",
-    "garment_4": "string in format 'description type gender'"
+    "garment_1": "string in format 'description type gender (men or women)', e.g. 'white t-shirt men'",
+    "garment_2": "string in format 'description type gender (men or women)', e.g. 'dark wash jeans women'",
+    "garment_3": "string in format 'description type gender (men or women)'",
+    "garment_4": "string in format 'description type gender (men or women)'"
   }
 }
 \`\`\`

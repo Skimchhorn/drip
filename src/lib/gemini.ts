@@ -66,13 +66,13 @@ ${keys}
  */
 export function promptFromImageForKeywords(opts: { garmentCount: number }) {
   const count = Math.max(1, Math.min(10, opts.garmentCount || 10));
-  const keys = Array.from({ length: count }, (_, i) => `  "garment_${i + 1}": "string in format 'description type gender'"`).join(',\n');
+  const keys = Array.from({ length: count }, (_, i) => `  "garment_${i + 1}": "string in format 'description type gender (men or women)'"`).join(',\n');
 
   return `
 You are a professional fashion stylist and visual trend analyst.
 Carefully examine the provided outfit image and perform the following tasks:
 
-1. Identify the subject's *perceived gender presentation* (choose "men" or "women").
+1. Identify the subject's gender from the image (choose "men" or "women". DO NOT choose unisex).
 2. Determine the outfit's dominant *fashion style or aesthetic* (e.g., minimal, streetwear, business casual, vintage, athleisure, bohemian).
 3. Identify the *primary and secondary color palette* visible in the clothing.
 4. Infer the *style identity and mood* created by the combination of garments, silhouettes, and colors.
@@ -133,10 +133,10 @@ Return STRICT JSON ONLY in the following format:
   },
   "ai_script": "A conversational 2-3 sentence voice script that an AI stylist would say to introduce this style and garment suggestions to the user",
   "garment_suggestion": {
-    "garment_1": "color description type gender (e.g., 'navy slim-fit blazer men')",
-    "garment_2": "color description type gender",
-    "garment_3": "color description type gender",
-    "garment_4": "color description type gender"
+    "garment_1": "color description type gender (men or women)) (e.g., 'navy slim-fit blazer men')",
+    "garment_2": "color description type gender (men or women)",
+    "garment_3": "color description type gender (men or women)",
+    "garment_4": "color description type gender (men or women)"
   }
 }
 

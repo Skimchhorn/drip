@@ -60,7 +60,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
   async function searchOneImage(keyword: string): Promise<Tile | null> {
     try {
       // Use the style_search endpoint with the keyword
-      const response = await fetch(`/api/style_search?styleReference=${encodeURIComponent(keyword)}&num=1`);
+      const response = await fetch(`/api/style_search?q=${encodeURIComponent(keyword)}&num=1`);
 
       if (!response.ok) {
         return null;
@@ -68,9 +68,9 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
 
       const data = await response.json();
 
-      // Extract first image from results
-      if (data.results && data.results.length > 0) {
-        const firstImage = data.results[0];
+      // Extract first image from images array
+      if (data.images && data.images.length > 0) {
+        const firstImage = data.images[0];
         return {
           keyword,
           imageUrl: firstImage.url,
@@ -139,9 +139,9 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col gap-4 p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800">
+    <div className="flex flex-col gap-4 p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 h-full">
       {/* Search Row */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-shrink-0">
         <SearchInput
           value={query}
           onChange={setQuery}
@@ -156,26 +156,19 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
       </div>
 
       {/* Middle Card - AI Output */}
-      <div className="h-[180px] p-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-y-auto">
+      <div className="h-[160px] flex-shrink-0 p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-y-auto">
         {status === 'idle' && (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-            <Sparkles className="w-12 h-12 mb-4 opacity-30" />
-            <p>Ask AI for style recommendations</p>
-            <p className="mt-2 text-sm">Try: &quot;casual summer outfits&quot; or &quot;minimal streetwear&quot;</p>
+            <Sparkles className="w-10 h-10 mb-3 opacity-30" />
+            <p className="text-sm">Ask AI for style recommendations</p>
+            <p className="mt-1 text-xs">Try: &quot;casual summer outfits&quot;</p>
           </div>
         )}
 
         {status === 'loading' && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">Thinking...</span>
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full bg-zinc-800/60" />
-              <Skeleton className="h-4 w-5/6 bg-zinc-800/60" />
-              <Skeleton className="h-4 w-4/6 bg-zinc-800/60" />
-            </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">Thinking...</span>
           </div>
         )}
 
@@ -186,15 +179,15 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         )}
 
         {status === 'success' && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {/* AI Feedback */}
-            <p className="text-sm text-foreground line-clamp-5">{feedback}</p>
+            <p className="text-xs text-foreground leading-relaxed">{feedback}</p>
 
             {/* Style Keywords */}
             {styleKeywords.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {styleKeywords.map((keyword, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">
+                  <Badge key={idx} variant="secondary" className="text-xs px-2 py-0.5">
                     {keyword}
                   </Badge>
                 ))}
@@ -205,17 +198,17 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
       </div>
 
       {/* Bottom Rectangle - Image Tiles */}
-      <div className="h-[180px] p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 relative">
+      <div className="h-[160px] flex-shrink-0 p-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 relative overflow-hidden">
         {status === 'idle' && (
           <div className="flex items-center justify-center h-full text-center text-muted-foreground">
-            <p className="text-sm">Style results will appear here</p>
+            <p className="text-xs">Style results will appear here</p>
           </div>
         )}
 
         {status === 'loading' && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto h-full">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="snap-start min-w-[100px] h-[140px] rounded-lg bg-zinc-800/60 flex-shrink-0" />
+              <Skeleton key={i} className="snap-start w-[80px] h-full rounded-lg bg-zinc-800/60 flex-shrink-0" />
             ))}
           </div>
         )}
@@ -224,21 +217,21 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
           <>
             <div
               id="tiles-container"
-              className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent h-full"
+              className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent h-full"
             >
               {tiles.map((tile, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleTileClick(tile)}
-                  className="snap-start min-w-[100px] h-[140px] rounded-lg overflow-hidden flex-shrink-0 group relative hover:ring-2 hover:ring-primary transition-all"
+                  className="snap-start w-[80px] h-full rounded-lg overflow-hidden flex-shrink-0 group relative hover:ring-2 hover:ring-primary transition-all"
                 >
                   <img
                     src={tile.imageUrl}
                     alt={tile.keyword}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="absolute bottom-1 left-1 right-1 text-xs text-white line-clamp-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="absolute bottom-1 left-1 right-1 text-[10px] text-white line-clamp-2 leading-tight">
                       {tile.keyword}
                     </p>
                   </div>
@@ -247,23 +240,23 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
             </div>
 
             {/* Scroll buttons */}
-            {tiles.length > 4 && (
+            {tiles.length > 5 && (
               <>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-1 top-1/2 -translate-y-1/2 bg-zinc-900/80 hover:bg-zinc-800 h-8 w-8"
+                  className="absolute left-1 top-1/2 -translate-y-1/2 bg-zinc-900/90 hover:bg-zinc-800 h-7 w-7"
                   onClick={() => scrollTiles('left')}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3 h-3" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 bg-zinc-900/80 hover:bg-zinc-800 h-8 w-8"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 bg-zinc-900/90 hover:bg-zinc-800 h-7 w-7"
                   onClick={() => scrollTiles('right')}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3 h-3" />
                 </Button>
               </>
             )}
@@ -271,7 +264,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         )}
 
         {status === 'success' && tiles.length === 0 && (
-          <div className="flex items-center justify-center h-full text-center text-muted-foreground text-sm">
+          <div className="flex items-center justify-center h-full text-center text-muted-foreground text-xs">
             No results found
           </div>
         )}
