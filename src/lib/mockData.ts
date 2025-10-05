@@ -191,8 +191,11 @@ export const performTryOn = async (userImageUrl: string, garmentImageUrl: string
   return userImageUrl;
 };
 
-// New API function: Get garment suggestions from image URL
-export async function getGarmentSuggestionsFromImage(imageUrl: string): Promise<{
+// New API function: Get garment suggestions from image URL with progressive updates
+export async function getGarmentSuggestionsFromImage(
+  imageUrl: string,
+  onProgressUpdate?: (partialResults: Record<string, any[]>) => void
+): Promise<{
   garment_keywords: Record<string, string>;
   garment_results: Record<string, any[]>;
 }> {
@@ -224,6 +227,10 @@ export async function getGarmentSuggestionsFromImage(imageUrl: string): Promise<
       if (searchResponse.ok) {
         const data = await searchResponse.json();
         garment_results[key] = data.images || [];
+                // Call the progress callback with current results
+        if (onProgressUpdate) {
+          onProgressUpdate({ ...garment_results });
+        }
       } else if (searchResponse.status === 429) {
         // Hit rate limit, stop making more requests
         console.warn('Rate limit reached while fetching garments, stopping');
@@ -275,6 +282,27 @@ export async function getGarmentSuggestionsFromStyle(styleReference: string): Pr
   return response.json();
 }
 
+// Helper function to extract store name from URL
+function extractStoreName(url: string): string {
+  if (!url || url === '#') return 'Online Store';
+
+  try {
+    const hostname = new URL(url).hostname;
+    // Remove 'www.' prefix if present
+    const domain = hostname.replace(/^www\./, '');
+
+    // Extract the main domain name (e.g., 'amazon.com' -> 'Amazon')
+    const parts = domain.split('.');
+    const mainName = parts[0];
+
+    // Capitalize first letter
+    return mainName.charAt(0).toUpperCase() + mainName.slice(1);
+  } catch (error) {
+    return 'Online Store';
+  }
+}
+
+
 // Convert garment results to Product format
 export function convertGarmentResultsToProducts(garmentResults: Record<string, any[]>): Product[] {
   const products: Product[] = [];
@@ -286,7 +314,7 @@ export function convertGarmentResultsToProducts(garmentResults: Record<string, a
         id: `${key}-${productId++}`,
         garmentType: key.replace('garment_', '') as 'top' | 'bottom' | 'outerwear' | 'shoes',
         imageUrl: image.url,
-        brand: 'Online Store',
+        brand: extractStoreName(image.pageUrl),
         name: image.title || 'Garment',
         price: Math.floor(Math.random() * 150) + 29.99, // Random price for now
         retailerLink: image.pageUrl || '#',

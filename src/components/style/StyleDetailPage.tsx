@@ -58,9 +58,15 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
     setIsLoadingProducts(true);
     try {
       console.log('Analyzing image:', selectedImage.imageUrl);
-
-      // Get garment suggestions from image using Gemini API
-      const result = await getGarmentSuggestionsFromImage(selectedImage.imageUrl);
+      // Get garment suggestions from image using Gemini API with progressive updates
+      const result = await getGarmentSuggestionsFromImage(
+        selectedImage.imageUrl,
+        (partialResults) => {
+          // Update products as each batch of garments arrives
+          const productList = convertGarmentResultsToProducts(partialResults);
+          setProducts(productList);
+        }
+      );
 
       // Set detected garments from the garment_keywords object
       const garmentList = Object.entries(result.garment_keywords).map(([key, value]) => ({
@@ -100,7 +106,14 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
     setIsAnalyzing(true);
     setIsLoadingProducts(true);
     try {
-      const result = await getGarmentSuggestionsFromImage(imageUrl);
+      const result = await getGarmentSuggestionsFromImage(
+        imageUrl,
+        (partialResults) => {
+          // Update products as each batch of garments arrives
+          const productList = convertGarmentResultsToProducts(partialResults);
+          setProducts(productList);
+        }
+      );
 
       const garmentList = Object.entries(result.garment_keywords).map(([key, value]) => ({
         id: key,
