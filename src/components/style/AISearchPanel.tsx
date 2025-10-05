@@ -33,9 +33,10 @@ type AiSearchState = 'idle' | 'loading' | 'error' | 'success';
 
 interface AISearchPanelProps {
   onReferenceReplace: (imageUrl: string) => void;
+  userImage?: string | null;
 }
 
-export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
+export function AISearchPanel({ onReferenceReplace, userImage }: AISearchPanelProps) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<AiSearchState>('idle');
   const [feedback, setFeedback] = useState('');
@@ -43,11 +44,14 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  async function getGeminiSuggestions(text: string): Promise<GeminiTextResponse> {
+  async function getGeminiSuggestions(text: string, userImageUrl?: string | null): Promise<GeminiTextResponse> {
     const response = await fetch('/api/gemini_keywords_from_text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({
+        text,
+        userImageUrl: userImageUrl || undefined
+      }),
     });
 
     if (!response.ok) {
@@ -93,7 +97,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
     setError(undefined);
 
     try {
-      const res = await getGeminiSuggestions(query.trim());
+      const res = await getGeminiSuggestions(query.trim(), userImage);
       setFeedback(res.feedback);
 
       // Convert style_keywords object to array
@@ -139,10 +143,10 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 h-[600px] w-full">
+    <div className="flex flex-col gap-4 p-5 rounded-2xl bg-white/80 backdrop-blur-sm border border-border h-[600px] w-full overflow-hidden">
       {/* Search Row */}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="w-full max-w-xl">
+      <div className="flex items-start gap-3 flex-shrink-0">
+        <div className="flex-1 min-w-0">
           <SearchInput
             value={query}
             onChange={setQuery}
@@ -158,11 +162,11 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
       </div>
 
       {/* Middle Card - AI Output */}
-      <div className="h-[200px] flex-shrink-0 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-y-auto">
+      <div className="flex-shrink-0 p-5 rounded-2xl border border-border bg-white/60 backdrop-blur-sm overflow-y-auto max-h-[180px]">
         {status === 'idle' && (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Sparkles className="w-12 h-12 mb-4 opacity-30" />
-            <p className="text-xl">Ask your AI stylist for style recommendations</p>
+            <p className="text-lg">Ask your AI stylist for style recommendations</p>
             <p className="mt-2 text-base">Try: &quot;casual summer outfits&quot;</p>
           </div>
         )}
@@ -170,12 +174,12 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         {status === 'loading' && (
           <div className="flex items-center gap-3">
             <Loader2 className="w-6 h-6 animate-spin" />
-            <span className="text-xl text-muted-foreground">Thinking...</span>
+            <span className="text-lg text-muted-foreground">Thinking...</span>
           </div>
         )}
 
         {status === 'error' && (
-          <div className="text-xl text-destructive">
+          <div className="text-lg text-destructive">
             {error}
           </div>
         )}
@@ -183,7 +187,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         {status === 'success' && (
           <div className="space-y-3">
             {/* AI Feedback */}
-            <p className="text-base text-foreground leading-relaxed">{feedback}</p>
+            <p className="text-lg text-foreground leading-relaxed">{feedback}</p>
 
             {/* Style Keywords */}
             {styleKeywords.length > 0 && (
@@ -200,7 +204,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
       </div>
 
       {/* Bottom Rectangle - Image Tiles */}
-      <div className="h-[300px] flex-shrink-0 p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 relative overflow-hidden">
+      <div className="flex-1 min-h-0 p-4 rounded-2xl border border-border bg-white/60 backdrop-blur-sm relative overflow-hidden">
         {status === 'idle' && (
           <div className="flex items-center justify-center h-full text-center text-muted-foreground">
             <p className="text-base">Style results will appear here</p>
@@ -210,7 +214,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         {status === 'loading' && (
           <div className="flex gap-3 overflow-x-auto h-full">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="snap-start w-[220px] h-full rounded-xl bg-zinc-800/60 flex-shrink-0" />
+              <Skeleton key={i} className="snap-start w-[220px] h-full rounded-xl bg-muted flex-shrink-0" />
             ))}
           </div>
         )}
@@ -219,7 +223,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
           <>
             <div
               id="tiles-container"
-              className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent h-full"
+              className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-thin h-full"
             >
               {tiles.map((tile, idx) => (
                 <button
@@ -247,7 +251,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-zinc-900/90 hover:bg-zinc-800 h-10 w-10"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white h-10 w-10"
                   onClick={() => scrollTiles('left')}
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -255,7 +259,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-zinc-900/90 hover:bg-zinc-800 h-10 w-10"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white h-10 w-10"
                   onClick={() => scrollTiles('right')}
                 >
                   <ChevronRight className="w-5 h-5" />

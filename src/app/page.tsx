@@ -35,6 +35,7 @@ export default function Home() {
           setIsLoading(true);
           const allFetchedImages: StyleImage[] = [];
           const query = searchQuery.trim() || 'fashion';
+          const searchId = Date.now(); // Unique ID for this search to avoid key collisions
 
           // Start with fewer requests to avoid rate limiting
           // Make requests sequentially with delay to respect rate limits
@@ -49,7 +50,7 @@ export default function Home() {
 
               if (response.ok && data.images) {
                 const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-                  id: `img-${start + index}`,
+                  id: `${searchId}-img-${start + index}`,
                   title: img.title || 'Fashion Style',
                   imageUrl: img.url,
                   tags: ['fashion', 'style'],
@@ -203,7 +204,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Upload Confirmation Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent>
@@ -245,7 +246,7 @@ export default function Home() {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             {/* Navigation Bar */}
-            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-border">
           <div className="container mx-auto px-3 h-[70px] sm:h-[78px] flex items-center justify-between gap-2 sm:gap-4">
             {/* Logo */}
             <div className="flex items-center">

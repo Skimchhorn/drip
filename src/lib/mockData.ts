@@ -227,7 +227,8 @@ export async function getGarmentSuggestionsFromImage(
       if (searchResponse.ok) {
         const data = await searchResponse.json();
         garment_results[key] = data.images || [];
-                // Call the progress callback with current results
+
+        // Call the progress callback with current results
         if (onProgressUpdate) {
           onProgressUpdate({ ...garment_results });
         }
