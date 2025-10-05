@@ -147,26 +147,26 @@ export default function Home() {
           >
             {/* Navigation Bar */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-              <div className="container mx-auto px-4 h-full">
-                <div className="flex flex-col items-center justify-center gap-2 py-2 sm:flex-row sm:justify-between">
-                  <div className="flex items-center justify-center sm:justify-start w-full sm:w-auto">
-                    <Image
-                      src="/logo-removebg-preview.png"
-                      alt="Logo"
-                      width={180}
-                      height={180}
-                      className="w-32 sm:w-40 md:w-44 h-auto rounded-xl"
-                      priority
-                    />
-                  </div>
-
-                  {/* Search Bar */}
-                  <div className="w-full sm:w-auto sm:flex-1 max-w-full sm:max-w-3xl px-1 sm:px-4">
-                    <SearchBar value={searchQuery} onChange={setSearchQuery} />
-                  </div>
-                </div>
-              </div>
+          <div className="container mx-auto px-3 h-[70px] sm:h-[78px] flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center">
+              <Image
+                src="/logo-removebg-preview.png"
+                alt="Logo"
+                width={120}
+                height={120}
+                className="w-24 sm:w-28 md:w-32 h-auto rounded-xl"
+                priority
+              />
             </div>
+
+            {/* Search Bar */}
+            <div className="w-full sm:w-auto sm:flex-1 max-w-full sm:max-w-2xl px-2 sm:px-4">
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
+          </div>
+        </div>
+
 
             {/* Gallery Grid */}
             <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-30' : 'opacity-100'}`}>
