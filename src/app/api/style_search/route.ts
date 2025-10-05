@@ -1,5 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Style Search API (Pinterest)
+ *
+ * Searches for style images using Google Custom Search API with STYLE_SEARCH_ID.
+ *
+ * REQUEST:
+ *   Method: GET
+ *   Query Parameters:
+ *     - q (required): Search query string (e.g., "casual summer mens outfits")
+ *     - num (optional): Number of results to return (default: "10")
+ *     - start (optional): Starting index for results (default: "1")
+ *     - imgSize (optional): Image size filter (e.g., "medium", "large")
+ *     - imgType (optional): Image type filter (e.g., "photo", "clipart")
+ *     - safe (optional): Safe search setting (default: "active")
+ *     - rights (optional): Usage rights filter
+ *     - fileType (optional): File type filter (e.g., "jpg", "png")
+ *
+ * RESPONSE:
+ *   Success (200):
+ *   {
+ *     "query": "casual summer mens outfits",
+ *     "total": 10,
+ *     "nextStart": 11,
+ *     "images": [
+ *       {
+ *         "title": "Image title",
+ *         "url": "https://example.com/image.jpg",
+ *         "thumb": "https://example.com/thumb.jpg",
+ *         "pageUrl": "https://example.com/page",
+ *         "width": 1920,
+ *         "height": 1080,
+ *         "mime": "image/jpeg"
+ *       }
+ *     ]
+ *   }
+ *
+ *   Error (400):
+ *   {
+ *     "error": "Missing q"
+ *   }
+ */
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q");
   if (!q) return NextResponse.json({ error: "Missing q" }, { status: 400 });

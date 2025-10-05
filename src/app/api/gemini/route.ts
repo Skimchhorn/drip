@@ -5,6 +5,66 @@ import { GoogleGenAI } from '@google/genai';
 export const runtime = 'nodejs'; // Ensure Node runtime (not Edge)
 export const dynamic = 'force-dynamic';
 
+/**
+ * Gemini Style Analysis API
+ *
+ * Analyzes a style image and provides fashion feedback with garment suggestions.
+ *
+ * REQUEST:
+ *   Method: POST
+ *   Headers:
+ *     Content-Type: application/json
+ *   Body:
+ *   {
+ *     "image_url": "https://example.com/image.jpg"
+ *   }
+ *
+ * RESPONSE:
+ *   Success (200):
+ *   {
+ *     "score": "75",
+ *     "feedback": {
+ *       "bullet_point_1": {
+ *         "summary": "Great color coordination",
+ *         "detail": "The color palette works well together. The neutral tones create a cohesive look."
+ *       },
+ *       "bullet_point_2": {
+ *         "summary": "Good fit overall",
+ *         "detail": "The garments appear to fit well. Consider tailoring for a more refined silhouette."
+ *       },
+ *       "bullet_point_3": {
+ *         "summary": "Modern style aesthetic",
+ *         "detail": "The outfit follows current trends effectively. Consider adding statement pieces."
+ *       },
+ *       "ai_script": "Your outfit scores a 75! The color coordination is excellent..."
+ *     },
+ *     "garment_suggestion": {
+ *       "garment_1": "white t-shirt men",
+ *       "garment_2": "dark wash jeans men",
+ *       "garment_3": "casual sneakers men",
+ *       "garment_4": "denim jacket men"
+ *     }
+ *   }
+ *
+ *   Error (400):
+ *   {
+ *     "error": "Missing required field",
+ *     "details": "image_url is required in the request body"
+ *   }
+ *
+ *   Error (400):
+ *   {
+ *     "error": "Invalid URL",
+ *     "details": "Please provide a valid image URL"
+ *   }
+ *
+ *   Error (500):
+ *   {
+ *     "error": "Analysis failed",
+ *     "details": "Error message"
+ *   }
+ */
+
 // ===============================
 // TYPE DEFINITIONS
 // ===============================
