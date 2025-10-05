@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const params = new URLSearchParams({
     key: process.env.GOOGLE_SEARCH_API_KEY!,
-    cx: process.env.GOOGLE_CSE_CX!,
+    cx: process.env.STYLE_SEARCH_ID!,
     q,
     searchType: "image",
     num,
