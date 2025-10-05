@@ -110,6 +110,15 @@ class GeminiStyleAnalyzer {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
+  private getGenerationConfig() {
+    return {
+      responseMimeType: 'application/json',
+      temperature: 0.3,
+      topP: 0.9,
+      maxOutputTokens: 1024,
+    } as const;
+  }
+
   private getPrompt(): string {
     return `You are a fashion expert AI. Your task is to analyze the person's outfit in the provided image and return a style assessment as a single, raw JSON object.
 
@@ -170,7 +179,7 @@ Return a JSON object with this exact structure. Note the required format for \`g
   }
 
   async analyzeStyle(imageBase64: string, mimeType: string): Promise<{ parsed: StyleAnalysisResponse; rawText: string }> {
-    const result = await this.ai.models.generateContent({
+    const params: any = {
       model: 'gemini-2.5-flash',
       contents: [
         {
@@ -181,19 +190,10 @@ Return a JSON object with this exact structure. Note the required format for \`g
         },
         { text: this.getPrompt() },
       ],
-      // IMPORTANT: use generationConfig (not "config")
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.3,
-        topP: 0.9,
-        maxOutputTokens: 1024,
-      },
-      config: {
-        thinkingConfig: {
-          thinkingBudget: 0, // Disables thinking
-        },
-      },
-    });
+      generationConfig: this.getGenerationConfig(),
+    };
+
+    const result = await (this.ai as any).models.generateContent(params);
 
     // Some SDK versions expose text directly; keep compatibility.
     const text = (result as any).text ?? (result as any).response?.text?.() ?? '';
