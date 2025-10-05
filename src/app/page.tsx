@@ -253,9 +253,9 @@ export default function Home() {
               <Image
                 src="/logo-removebg-preview.png"
                 alt="Logo"
-                width={120}
-                height={120}
-                className="w-24 sm:w-28 md:w-32 h-auto rounded-xl"
+                width={200}
+                height={200}
+                className="w-44 sm:w-48 md:w-50 h-auto rounded-xl"
                 priority
               />
             </div>
