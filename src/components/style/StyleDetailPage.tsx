@@ -9,7 +9,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CameraUpload } from '@/components/style/CameraUpload';
 import { ProductCarousel } from '@/components/style/ProductCarousel';
-import { OutfitBuilder } from '@/components/style/OutfitBuilder';
 import { HistoryPanel } from '@/components/style/HistoryPanel';
 import { AnimatedButton } from '@/components/style/AnimatedButton';
 import { AISearchPanel } from '@/components/style/AISearchPanel';
@@ -34,6 +33,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const [tryOnError, setTryOnError] = useState<string | null>(null);
 
   const displayImage = tryOnResult ?? (userImage || null);
+  const isTryOnInProgress = Boolean(loadingProductId);
 
   const handleUserImageCapture = (image: string) => {
     setUserImage(image);
@@ -260,13 +260,15 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
           {/* Right Pane - Upload & AI Styles */}
           <div className="lg:col-span-2 space-y-8">
             {/* Right Pane Container with horizontal layout on desktop */}
-            <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex flex-col lg:flex-row gap-6 lg:items-stretch">
               {/* Upload Your Photo Card (fixed width on desktop) */}
-              <div className="w-full lg:w-[360px] flex-shrink-0 space-y-2">
+              <div className="w-full lg:w-[380px] flex-shrink-0 space-y-2 lg:self-stretch">
                 <CameraUpload
                   image={displayImage}
                   onImageCapture={handleUserImageCapture}
                   onReset={handleResetCapture}
+                  isGenerating={isTryOnInProgress}
+                  className="min-h-[540px]"
                 />
                 {tryOnError && (
                   <p className="text-sm text-destructive">{tryOnError}</p>
@@ -286,21 +288,18 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
               className={`transition-opacity duration-300 ${isAnalyzing ? 'opacity-30' : 'opacity-100'}`}
             >
               {products.length > 0 && (
-                <Card className="p-6">
-                  <h3 className="mb-4">Similar Garments</h3>
-                  <ProductCarousel
-                    products={products}
-                    onTryOn={handleTryOn}
-                    loadingProductId={loadingProductId}
+                  <Card className="p-6">
+                    <h3 className="mb-4">Similar Garments</h3>
+                    <ProductCarousel
+                      products={products}
+                      onTryOn={handleTryOn}
+                      loadingProductId={loadingProductId}
                   />
                 </Card>
               )}
             </motion.div>
 
             {/* Try-On Canvas */}
-            {/* Outfit Builder */}
-            <OutfitBuilder availableProducts={products} />
-
             {/* History */}
             {history.length > 0 && (
               <HistoryPanel

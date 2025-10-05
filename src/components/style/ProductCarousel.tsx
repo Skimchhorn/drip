@@ -17,9 +17,7 @@ interface ProductCarouselProps {
 export function ProductCarousel({ products, onTryOn, loadingProductId }: ProductCarouselProps) {
   return (
     <div className="space-y-4">
-      <h3>Similar Garments</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {products.map((product, index) => (
           <motion.div
             key={product.id}

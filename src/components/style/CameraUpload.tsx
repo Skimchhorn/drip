@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload } from 'lucide-react';
+import { Camera, Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
@@ -10,9 +10,17 @@ interface CameraUploadProps {
   image: string | null;
   onImageCapture: (imageUrl: string) => void;
   onReset: () => void;
+  isGenerating?: boolean;
+  className?: string;
 }
 
-export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadProps) {
+export function CameraUpload({
+  image,
+  onImageCapture,
+  onReset,
+  isGenerating = false,
+  className = '',
+}: CameraUploadProps) {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -22,6 +30,8 @@ export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadPro
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  const cardClassName = ['p-6', 'flex', 'h-full', 'flex-col', className].filter(Boolean).join(' ');
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -149,19 +159,24 @@ export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadPro
 
   return (
     <>
-      <Card className="p-6">
-      <h3 className="mb-4">Upload Your Photo</h3>
-      
-      <div className="flex justify-start">
-        <div className="w-full sm:max-w-xs">
+      <Card className={cardClassName}>
+        <h3 className="mb-4">Upload Your Photo</h3>
+
+        <div className="flex-1">
           {image ? (
-            <div className="space-y-4">
-              <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-muted">
+            <div className="flex h-full flex-col">
+              <div className="relative flex-1 rounded-xl overflow-hidden bg-muted">
                 <ImageWithFallback
                   src={image}
                   alt="Captured"
-                  className="w-full h-full object-cover"
+                  className={`h-full w-full object-cover transition-opacity ${isGenerating ? 'opacity-60' : ''}`}
                 />
+                {isGenerating && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="text-sm font-medium">Generating photo...</span>
+                  </div>
+                )}
               </div>
               <Button
                 variant="outline"
@@ -169,13 +184,14 @@ export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadPro
                   onReset();
                   setErrorMessage(null);
                 }}
-                className="w-full"
+                className="mt-4 w-full"
+                disabled={isGenerating}
               >
                 Reset
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="flex h-full flex-col">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -184,43 +200,46 @@ export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadPro
                 className="hidden"
               />
 
-              <div className="relative w-full aspect-[3/4] rounded-xl border-2 border-dashed border-border bg-muted/30 flex flex-col items-center justify-center gap-6 p-6">
-                <Button
-                  onClick={startWebcam}
-                  variant="outline"
-                  className="w-full h-20"
-                  disabled={isStartingCamera || isCameraActive}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Camera className="w-6 h-6" />
-                    <span>
-                      {isCameraActive
-                        ? 'Camera active...'
-                        : isStartingCamera
-                          ? 'Starting camera...'
-                          : 'Take Photo'}
-                    </span>
-                  </div>
-                </Button>
+              <div className="relative flex-1 min-h-[360px] rounded-xl border-2 border-dashed border-border bg-muted/30 p-6">
+                <div className="flex h-full flex-col items-center justify-center gap-6">
+                  <Button
+                    onClick={startWebcam}
+                    variant="outline"
+                    className="w-full h-20"
+                    disabled={isStartingCamera || isCameraActive || isGenerating}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Camera className="w-6 h-6" />
+                      <span>
+                        {isCameraActive
+                          ? 'Camera active...'
+                          : isStartingCamera
+                            ? 'Starting camera...'
+                            : 'Take Photo'}
+                      </span>
+                    </div>
+                  </Button>
 
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  className="w-full h-20"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="w-6 h-6" />
-                    <span>Upload Image</span>
-                  </div>
-                </Button>
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    className="w-full h-20"
+                    disabled={isGenerating}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-6 h-6" />
+                      <span>Upload Image</span>
+                    </div>
+                  </Button>
+                </div>
               </div>
             </div>
           )}
+
           {errorMessage && (
-            <p className="text-sm text-destructive mt-2">{errorMessage}</p>
+            <p className="mt-3 text-sm text-destructive">{errorMessage}</p>
           )}
         </div>
-      </div>
       </Card>
 
       {isCameraActive && (
@@ -250,7 +269,7 @@ export function CameraUpload({ image, onImageCapture, onReset }: CameraUploadPro
                   onClick={handleCaptureClick}
                   disabled={isCountingDown}
                 >
-                  {isCountingDown ? 'Capturing...' : 'Capture'}
+                  {isCountingDown ? 'Capturing...' : 'Capture (3s)'}
                 </Button>
                 <Button
                   size="lg"
