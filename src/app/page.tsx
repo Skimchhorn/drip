@@ -9,6 +9,9 @@ import { SearchBar } from '@/components/gallery/SearchBar';
 import { FilterDrawer } from '@/components/gallery/FilterDrawer';
 import { BackToTop } from '@/components/gallery/BackToTop';
 import { StyleDetailPage } from '@/components/style/StyleDetailPage';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Upload } from 'lucide-react';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<'gallery' | 'detail'>('gallery');
@@ -19,6 +22,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const IMAGES_PER_BATCH = 20;
 
   // Fetch all images from style_search endpoint
@@ -134,8 +139,79 @@ export default function Home() {
     setSelectedImage(null);
   };
 
+  const handleUploadClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setUploadedImage(e.target?.result as string);
+          setShowUploadDialog(true);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  const handleConfirmUpload = () => {
+    setShowUploadDialog(false);
+    if (uploadedImage) {
+      // Create a StyleImage from the uploaded photo
+      const uploadedStyleImage: StyleImage = {
+        id: `uploaded-${Date.now()}`,
+        title: 'Your Reference Photo',
+        imageUrl: uploadedImage,
+        tags: ['uploaded', 'reference'],
+        likes: 0,
+        isLiked: false,
+      };
+      setSelectedImage(uploadedStyleImage);
+      setCurrentPage('detail');
+    }
+  };
+
+  const handleCancelUpload = () => {
+    setShowUploadDialog(false);
+    setUploadedImage(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Upload Confirmation Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Reference Photo</DialogTitle>
+            <DialogDescription>
+              Do you want to set this as your reference photo?
+            </DialogDescription>
+          </DialogHeader>
+          {uploadedImage && (
+            <div className="flex justify-center py-4">
+              <Image
+                src={uploadedImage}
+                alt="Uploaded reference"
+                width={300}
+                height={300}
+                className="rounded-lg object-cover max-h-64"
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelUpload}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmUpload}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AnimatePresence mode="wait">
         {currentPage === 'gallery' ? (
           <motion.div
@@ -147,7 +223,7 @@ export default function Home() {
           >
             {/* Navigation Bar */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="container mx-auto px-3 h-[70px] sm:h-[78px] flex items-center justify-between">
+          <div className="container mx-auto px-3 h-[70px] sm:h-[78px] flex items-center justify-between gap-2 sm:gap-4">
             {/* Logo */}
             <div className="flex items-center">
               <Image
@@ -160,9 +236,19 @@ export default function Home() {
               />
             </div>
 
-            {/* Search Bar */}
-            <div className="w-full sm:w-auto sm:flex-1 max-w-full sm:max-w-2xl px-2 sm:px-4">
-              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            {/* Upload Style Button and Search Bar */}
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto sm:flex-1 max-w-full sm:max-w-2xl px-2 sm:px-0">
+              <Button
+                onClick={handleUploadClick}
+                variant="outline"
+                className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap px-2.5 sm:px-4 flex-shrink-0"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm">Upload Style</span>
+              </Button>
+              <div className="flex-1 min-w-0">
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              </div>
             </div>
           </div>
         </div>

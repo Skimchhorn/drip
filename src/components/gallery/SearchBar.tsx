@@ -10,14 +10,14 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
-    <div className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl md:scale-105 lg:scale-110 origin-center transition-transform">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+    <div className="relative w-full">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground pointer-events-none" />
       <Input
         type="text"
         placeholder="Search fashion styles..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10 bg-input-background border-border rounded-xl"
+        className="pl-9 sm:pl-10 pr-3 bg-input-background border-border rounded-xl text-sm sm:text-base w-full"
       />
     </div>
   );
