@@ -148,7 +148,7 @@ export default function Home() {
             {/* Navigation Bar */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
               <div className="container mx-auto px-4 h-full">
-                <div className="flex flex-col items-center justify-center gap-3 py-4 sm:flex-row sm:justify-between">
+                <div className="flex flex-col items-center justify-center gap-2 py-2 sm:flex-row sm:justify-between">
                   <div className="flex items-center justify-center sm:justify-start w-full sm:w-auto">
                     <Image
                       src="/logo-removebg-preview.png"
@@ -161,7 +161,7 @@ export default function Home() {
                   </div>
 
                   {/* Search Bar */}
-                  <div className="w-full sm:w-auto sm:flex-1 max-w-3xl px-2 sm:px-4">
+                  <div className="w-full sm:w-auto sm:flex-1 max-w-full sm:max-w-3xl px-1 sm:px-4">
                     <SearchBar value={searchQuery} onChange={setSearchQuery} />
                   </div>
                 </div>
