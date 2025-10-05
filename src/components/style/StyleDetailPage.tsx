@@ -283,6 +283,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
             <motion.div
               animate={shouldPulse ? { scale: [1, 1.02, 1] } : {}}
               transition={{ duration: 0.5, delay: 0.1 }}
+              className={`transition-opacity duration-300 ${isAnalyzing ? 'opacity-30' : 'opacity-100'}`}
             >
               {products.length > 0 && (
                 <Card className="p-6">

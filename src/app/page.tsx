@@ -172,11 +172,13 @@ export default function Home() {
             </div>
 
             {/* Gallery Grid */}
-            <GalleryGrid
-              images={filteredImages}
-              onImageClick={handleImageClick}
-              onLikeToggle={handleLikeToggle}
-            />
+            <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-30' : 'opacity-100'}`}>
+              <GalleryGrid
+                images={filteredImages}
+                onImageClick={handleImageClick}
+                onLikeToggle={handleLikeToggle}
+              />
+            </div>
 
             {/* Back to Top Button */}
             <BackToTop />
