@@ -90,8 +90,8 @@ export function ImageCard({ image, onImageClick, onLikeToggle }: ImageCardProps)
         </motion.button>
 
         {/* Like count */}
-        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm shadow-sm">
-          <span className="text-sm">{image.likes}</span>
+        <div className="absolute top-4 left-4 px-3 py-1 rounded-lg bg-black/60 text-white backdrop-blur-sm shadow-sm">
+          <span className="text-sm font-medium">{image.likes}</span>
         </div>
       </div>
     </motion.div>

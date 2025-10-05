@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import Masonry from 'react-responsive-masonry';
 import { StyleImage } from '@/lib/types';
 import { ImageCard } from '@/components/gallery/ImageCard';
+import { SimpleGrid } from '@/components/ui/simple-grid';
 
 interface GalleryGridProps {
   images: StyleImage[];
@@ -14,11 +13,7 @@ interface GalleryGridProps {
 export function GalleryGrid({ images, onImageClick, onLikeToggle }: GalleryGridProps) {
   return (
     <div className="px-4 md:px-8 py-8">
-      <Masonry
-        columnsCount={4}
-        gutter="1rem"
-        className="masonry-grid"
-      >
+      <SimpleGrid minItemWidth={260} gap={16}>
         {images.map((image) => (
           <ImageCard
             key={image.id}
@@ -27,22 +22,7 @@ export function GalleryGrid({ images, onImageClick, onLikeToggle }: GalleryGridP
             onLikeToggle={onLikeToggle}
           />
         ))}
-      </Masonry>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @media (max-width: 768px) {
-            .masonry-grid {
-              column-count: 2 !important;
-            }
-          }
-          @media (min-width: 769px) and (max-width: 1024px) {
-            .masonry-grid {
-              column-count: 3 !important;
-            }
-          }
-        `
-      }} />
+      </SimpleGrid>
     </div>
   );
 }
