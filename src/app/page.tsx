@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 import { StyleImage } from '@/lib/types';
+import Image from 'next/image';
 import { GalleryGrid } from '@/components/gallery/GalleryGrid';
 import { SearchBar } from '@/components/gallery/SearchBar';
 import { FilterDrawer } from '@/components/gallery/FilterDrawer';
@@ -151,10 +151,13 @@ export default function Home() {
                 <div className="flex items-center justify-between gap-4">
                   {/* Logo */}
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-white" />
-                    </div>
-                    <h1 className="hidden sm:block">StyleAI</h1>
+                    <Image
+                      src="/logo.png"
+                      alt="Logo"
+                      width={80}
+                      height={80}
+                      className="rounded-xl"
+                    />
                   </div>
 
                   {/* Search Bar */}

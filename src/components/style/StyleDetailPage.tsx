@@ -12,8 +12,8 @@ import { ProductCarousel } from '@/components/style/ProductCarousel';
 import { OutfitBuilder } from '@/components/style/OutfitBuilder';
 import { HistoryPanel } from '@/components/style/HistoryPanel';
 import { AnimatedButton } from '@/components/style/AnimatedButton';
-import { AIStylesColumn } from '@/components/style/AIStylesColumn';
-import { getGarmentSuggestionsFromStyle, convertGarmentResultsToProducts, mockGalleryImages } from '@/lib/mockData';
+import { AISearchPanel } from '@/components/style/AISearchPanel';
+import { getGarmentSuggestionsFromStyle, convertGarmentResultsToProducts } from '@/lib/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
 interface StyleDetailPageProps {
@@ -89,6 +89,36 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
     // Trigger pulse animation on detected items
     setShouldPulse(true);
     setTimeout(() => setShouldPulse(false), 1000);
+  };
+
+  const handleReferenceReplace = async (imageUrl: string) => {
+    // Update the reference image
+    setSelectedImage({
+      ...selectedImage,
+      imageUrl,
+    });
+
+    // Trigger garment search with the new reference
+    setIsAnalyzing(true);
+    try {
+      const styleReference = selectedImage.tags?.[0] || selectedImage.title || 'fashion';
+      const result = await getGarmentSuggestionsFromStyle(styleReference);
+
+      const garmentList = Object.entries(result.garment_suggestion).map(([key, value]) => ({
+        id: key,
+        type: value,
+        color: '',
+        confidence: 1.0,
+      }));
+      setDetectedGarments(garmentList);
+
+      const productList = convertGarmentResultsToProducts(result.garment_results);
+      setProducts(productList);
+    } catch (error) {
+      console.error('Error analyzing new reference:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleTryOn = async (product: Product) => {
@@ -249,11 +279,8 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
                 )}
               </div>
 
-              {/* AI Styles Column (fills remaining space) */}
-              <AIStylesColumn
-                availableStyles={mockGalleryImages}
-                onStyleSelect={handleStyleSelect}
-              />
+              {/* AI Search Panel (fills remaining space) */}
+              <AISearchPanel onReferenceReplace={handleReferenceReplace} />
             </div>
 
             {/* Similar Garments Section */}

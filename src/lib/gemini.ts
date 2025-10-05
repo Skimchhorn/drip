@@ -72,11 +72,12 @@ export function promptFromImageForKeywords(opts: { garmentCount: number }) {
 You are a professional fashion stylist and visual trend analyst.
 Carefully examine the provided outfit image and perform the following tasks:
 
-1. Identify the outfit's dominant *fashion style or aesthetic* (e.g., minimal, streetwear, business casual, vintage, athleisure, bohemian).
-2. Determine the *primary and secondary color palette* visible in the clothing.
-3. Infer the *style identity and mood* created by the combination of garments, silhouettes, and colors.
+1. Identify the subject's *perceived gender presentation* (choose "men" or "women").
+2. Determine the outfit's dominant *fashion style or aesthetic* (e.g., minimal, streetwear, business casual, vintage, athleisure, bohemian).
+3. Identify the *primary and secondary color palette* visible in the clothing.
+4. Infer the *style identity and mood* created by the combination of garments, silhouettes, and colors.
 
-Based on this full analysis, output STRICT JSON ONLY with ${count} garments that match and complement the *same overall style and color palette*, as if curating cohesive items to recreate the look.
+Based on this full analysis, output STRICT JSON ONLY with ${count} garments that match and complement the *same overall style, color palette,* and *gender presentation*, as if curating cohesive items to recreate the look.
 
 Return JSON in **exactly** this format:
 {
@@ -84,16 +85,16 @@ ${keys}
 }
 
 ### RULES:
-- Each garment must fit the same *style category* and *color harmony* as the outfit in the image.
+- Each garment must align with the *identified style category*, *color harmony*, and *gender presentation* inferred from the image.
 - Each value must follow this format: "color description type gender"
   (examples: "cream oversized hoodie men", "olive chinos men", "light wash denim jacket women").
-- Include a color adjective that accurately reflects the outfit's palette (e.g., beige, charcoal, pastel blue, sage green).
-- Focus only on *clothing items* (tops, bottoms, outerwear, dresses, shoes).
+- Include a color adjective that accurately reflects the outfit’s palette (e.g., beige, charcoal, pastel blue, sage green).
+- Focus strictly on *clothing items* (tops, bottoms, outerwear, dresses, shoes).
   Do **not** include accessories, bags, hats, or jewelry.
 - Ensure garment diversity (not all tops or all shoes unless visually appropriate).
-- No markdown, commentary, or natural language — return the **pure JSON object** only.
-- Avoid repeating color–type combinations unless stylistically necessary.
-- Prioritize garments that preserve both the *style identity* and *color cohesion* of the original outfit.
+- Return **only the JSON object** — no explanations, markdown, or commentary.
+- Avoid repeating color–type combinations unless essential to maintain the outfit’s cohesion.
+- Prioritize garments that preserve both *style identity* and *color cohesion* of the original outfit.
 `.trim();
 }
 
