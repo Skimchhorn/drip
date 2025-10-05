@@ -28,7 +28,7 @@ export function ImageCard({ image, onImageClick, onLikeToggle }: ImageCardProps)
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onImageClick(image)}
     >
-      <div className="relative overflow-hidden rounded-2xl bg-muted">
+      <div className="relative overflow-hidden rounded-2xl bg-white/70 backdrop-blur-sm">
         <motion.div
           animate={{ scale: isHovered ? 1.1 : 1 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}

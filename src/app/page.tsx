@@ -204,7 +204,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Upload Confirmation Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent>
@@ -246,7 +246,7 @@ export default function Home() {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             {/* Navigation Bar */}
-            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-border">
           <div className="container mx-auto px-3 h-[70px] sm:h-[78px] flex items-center justify-between gap-2 sm:gap-4">
             {/* Logo */}
             <div className="flex items-center">

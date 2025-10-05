@@ -25,7 +25,7 @@ export function CameraUpload({
   const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCountingDown, setIsCountingDown] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -53,7 +53,7 @@ export function CameraUpload({
       videoRef.current.srcObject = null;
     }
     setIsCountingDown(false);
-    setCountdown(3);
+    setCountdown(5);
     setIsCameraActive(false);
   }, []);
 
@@ -69,7 +69,7 @@ export function CameraUpload({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setIsCountingDown(false);
-      setCountdown(3);
+      setCountdown(5);
       streamRef.current = stream;
       setIsCameraActive(true);
     } catch (error) {
@@ -130,7 +130,7 @@ export function CameraUpload({
 
   const handleCaptureClick = useCallback(() => {
     if (isCountingDown) return;
-    setCountdown(3);
+    setCountdown(5);
     setIsCountingDown(true);
   }, [isCountingDown]);
 
@@ -145,7 +145,7 @@ export function CameraUpload({
 
     if (countdown === 0) {
       setIsCountingDown(false);
-      setCountdown(3);
+      setCountdown(5);
       capturePhoto();
       return;
     }
@@ -165,7 +165,7 @@ export function CameraUpload({
         <div className="flex-1">
           {image ? (
             <div className="flex h-full flex-col">
-              <div className="relative flex-1 rounded-xl overflow-hidden bg-muted">
+              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted">
                 <ImageWithFallback
                   src={image}
                   alt="Captured"
@@ -200,7 +200,7 @@ export function CameraUpload({
                 className="hidden"
               />
 
-              <div className="relative flex-1 min-h-[360px] rounded-xl border-2 border-dashed border-border bg-muted/30 p-6">
+              <div className="relative aspect-[3/4] rounded-xl border-2 border-dashed border-border bg-muted/30 p-6">
                 <div className="flex h-full flex-col items-center justify-center gap-6">
                   <Button
                     onClick={startWebcam}
@@ -244,37 +244,37 @@ export function CameraUpload({
 
       {isCameraActive && (
         <div className="fixed inset-0 z-[100] bg-background/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="relative w-full max-w-3xl aspect-[3/4] rounded-[2rem] overflow-hidden bg-black shadow-2xl">
+          <div className="relative w-full max-w-3xl max-h-[90vh] rounded-[2rem] overflow-hidden bg-black shadow-2xl flex flex-col">
             <video
               ref={videoRef}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="flex-1 w-full object-cover"
               playsInline
               muted
               autoPlay
             />
 
             {isCountingDown && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
                 <span className="text-white text-7xl font-semibold drop-shadow-lg">
                   {countdown}
                 </span>
               </div>
             )}
 
-            <div className="absolute inset-x-0 bottom-8 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-6">
-              <div className="flex items-center justify-center gap-4">
+            <div className="flex-shrink-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 sm:p-6">
+              <div className="flex items-center justify-center gap-3 sm:gap-4">
                 <Button
                   size="lg"
-                  className="px-10"
+                  className="px-6 sm:px-10"
                   onClick={handleCaptureClick}
                   disabled={isCountingDown}
                 >
-                  {isCountingDown ? 'Capturing...' : 'Capture (3s)'}
+                  {isCountingDown ? 'Capturing...' : 'Capture (5s)'}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="px-10"
+                  className="px-6 sm:px-10"
                   onClick={stopWebcam}
                   disabled={isCountingDown}
                 >

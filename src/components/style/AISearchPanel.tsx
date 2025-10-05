@@ -139,7 +139,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 h-[600px] w-full">
+    <div className="flex flex-col gap-4 p-5 rounded-2xl bg-white/80 backdrop-blur-sm border border-border h-[600px] w-full">
       {/* Search Row */}
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="w-full max-w-xl">
@@ -158,7 +158,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
       </div>
 
       {/* Middle Card - AI Output */}
-      <div className="h-[200px] flex-shrink-0 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-y-auto">
+      <div className="h-[200px] flex-shrink-0 p-5 rounded-2xl border border-border bg-white/60 backdrop-blur-sm overflow-y-auto">
         {status === 'idle' && (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Sparkles className="w-12 h-12 mb-4 opacity-30" />
@@ -200,7 +200,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
       </div>
 
       {/* Bottom Rectangle - Image Tiles */}
-      <div className="h-[300px] flex-shrink-0 p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 relative overflow-hidden">
+      <div className="h-[300px] flex-shrink-0 p-4 rounded-2xl border border-border bg-white/60 backdrop-blur-sm relative overflow-hidden">
         {status === 'idle' && (
           <div className="flex items-center justify-center h-full text-center text-muted-foreground">
             <p className="text-base">Style results will appear here</p>
@@ -210,7 +210,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         {status === 'loading' && (
           <div className="flex gap-3 overflow-x-auto h-full">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="snap-start w-[220px] h-full rounded-xl bg-zinc-800/60 flex-shrink-0" />
+              <Skeleton key={i} className="snap-start w-[220px] h-full rounded-xl bg-muted flex-shrink-0" />
             ))}
           </div>
         )}
@@ -219,7 +219,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
           <>
             <div
               id="tiles-container"
-              className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent h-full"
+              className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-thin h-full"
             >
               {tiles.map((tile, idx) => (
                 <button
@@ -247,7 +247,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-zinc-900/90 hover:bg-zinc-800 h-10 w-10"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white h-10 w-10"
                   onClick={() => scrollTiles('left')}
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -255,7 +255,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-zinc-900/90 hover:bg-zinc-800 h-10 w-10"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white h-10 w-10"
                   onClick={() => scrollTiles('right')}
                 >
                   <ChevronRight className="w-5 h-5" />

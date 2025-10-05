@@ -32,6 +32,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const [shouldPulse, setShouldPulse] = useState(false);
   const [tryOnError, setTryOnError] = useState<string | null>(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
 
   const displayImage = tryOnResult ?? (userImage || null);
   const isTryOnInProgress = Boolean(loadingProductId);
@@ -189,10 +190,10 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-background"
+      className="min-h-screen"
     >
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Button
@@ -282,13 +283,15 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
             <div className="flex flex-col lg:flex-row gap-6 lg:items-stretch">
               {/* Upload Your Photo Card (fixed width on desktop) */}
               <div className="w-full lg:w-[380px] flex-shrink-0 space-y-2 lg:self-stretch">
-                <CameraUpload
-                  image={displayImage}
-                  onImageCapture={handleUserImageCapture}
-                  onReset={handleResetCapture}
-                  isGenerating={isTryOnInProgress}
-                  className="min-h-[540px]"
-                />
+                <div onClick={() => displayImage && setIsImageExpanded(true)} className={displayImage ? 'cursor-pointer' : ''}>
+                  <CameraUpload
+                    image={displayImage}
+                    onImageCapture={handleUserImageCapture}
+                    onReset={handleResetCapture}
+                    isGenerating={isTryOnInProgress}
+                    className="min-h-[540px]"
+                  />
+                </div>
                 {tryOnError && (
                   <p className="text-sm text-destructive">{tryOnError}</p>
                 )}
@@ -330,7 +333,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
               </div>
 
               {(isLoadingProducts || isAnalyzing) && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-background/75 backdrop-blur-sm text-center px-6">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-white/75 backdrop-blur-sm text-center px-6">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   <p className="text-sm font-medium text-foreground">
                     Styling 40 garments to match your vibe…
@@ -354,6 +357,22 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
           </div>
         </div>
       </div>
+
+      {/* Expanded Image Modal */}
+      {isImageExpanded && displayImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsImageExpanded(false)}
+        >
+          <div className="relative max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <img
+              src={displayImage}
+              alt="Expanded view"
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
