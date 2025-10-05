@@ -64,6 +64,7 @@
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.6",
+    "@types/react-day-picker": "^5.2.1",
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.18.0",

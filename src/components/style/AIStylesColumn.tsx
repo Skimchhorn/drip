@@ -53,16 +53,18 @@ export function AIStylesColumn({ availableStyles, onStyleSelect }: AIStylesColum
     <div className="flex-1 flex flex-col gap-4 p-6 rounded-2xl bg-muted/30 shadow-sm border border-border/50">
       {/* Search Row */}
       <div className="flex items-center gap-3">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onEnter={handleSearch}
-          disabled={isSearching}
-        />
+        <div className="w-full max-w-xl">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onEnter={handleSearch}
+            disabled={isSearching}
+          />
+        </div>
         <SearchButton
           onClick={handleSearch}
           loading={isSearching}
-          label="Ask AI"
+          label="Ask Stylist"
         />
       </div>
 
@@ -71,7 +73,7 @@ export function AIStylesColumn({ availableStyles, onStyleSelect }: AIStylesColum
         {!hasSearched ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Sparkles className="w-12 h-12 mb-4 opacity-30" />
-            <p>Ask AI for style recommendations</p>
+            <p>Ask your AI stylist for style recommendations</p>
             <p className="mt-2">Try: "casual summer", "minimal street", or "urban chic"</p>
           </div>
         ) : isSearching ? (

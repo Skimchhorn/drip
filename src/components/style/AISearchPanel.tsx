@@ -141,17 +141,19 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
   return (
     <div className="flex flex-col gap-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 h-[600px] w-full">
       {/* Search Row */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <SearchInput
-          value={query}
-          onChange={setQuery}
-          onEnter={handleAskAI}
-          disabled={status === 'loading'}
-        />
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="w-full max-w-xl">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            onEnter={handleAskAI}
+            disabled={status === 'loading'}
+          />
+        </div>
         <SearchButton
           onClick={handleAskAI}
           loading={status === 'loading'}
-          label="Ask AI"
+          label="Ask Stylist"
         />
       </div>
 
@@ -160,7 +162,7 @@ export function AISearchPanel({ onReferenceReplace }: AISearchPanelProps) {
         {status === 'idle' && (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Sparkles className="w-12 h-12 mb-4 opacity-30" />
-            <p className="text-xl">Ask AI for style recommendations</p>
+            <p className="text-xl">Ask your AI stylist for style recommendations</p>
             <p className="mt-2 text-base">Try: &quot;casual summer outfits&quot;</p>
           </div>
         )}
