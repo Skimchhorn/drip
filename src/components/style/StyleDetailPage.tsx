@@ -14,7 +14,7 @@ import { TryOnCanvas } from '@/components/style/TryOnCanvas';
 import { HistoryPanel } from '@/components/style/HistoryPanel';
 import { AnimatedButton } from '@/components/style/AnimatedButton';
 import { AIStylesColumn } from '@/components/style/AIStylesColumn';
-import { detectGarments, searchProducts, performTryOn, mockGalleryImages } from '@/lib/mockData';
+import { detectGarments, searchProducts, mockGalleryImages } from '@/lib/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
 interface StyleDetailPageProps {
@@ -32,6 +32,7 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loadingProductId, setLoadingProductId] = useState<string | undefined>(undefined);
   const [shouldPulse, setShouldPulse] = useState(false);
+  const [tryOnError, setTryOnError] = useState<string | null>(null);
 
   // Auto-analyze reference image on mount and when it changes
   useEffect(() => {
@@ -71,21 +72,44 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
     }
 
     setLoadingProductId(product.id);
+    setTryOnError(null);
     try {
-      const result = await performTryOn(userImage, product.imageUrl);
-      setTryOnResult(result);
+      const response = await fetch('/api/fashAI', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelImage: userImage,
+          garmentImage: product.imageUrl,
+        }),
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Try-on request failed');
+      }
+
+      if (!payload?.output) {
+        throw new Error('Try-on response did not include an image');
+      }
+
+      const resultUrl = payload.output as string;
+      setTryOnResult(resultUrl);
 
       // Add to history
       const newHistoryItem: TryOnHistory = {
         id: Date.now().toString(),
         timestamp: new Date(),
-        imageUrl: result,
+        imageUrl: resultUrl,
         products: [product],
         totalPrice: product.price,
       };
-      setHistory([newHistoryItem, ...history]);
+      setHistory((prev) => [newHistoryItem, ...prev]);
     } catch (error) {
       console.error('Error performing try-on:', error);
+      setTryOnError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setLoadingProductId(undefined);
     }
@@ -218,7 +242,12 @@ export function StyleDetailPage({ selectedImage: initialImage, onBack }: StyleDe
 
             {/* Try-On Canvas */}
             {userImage && (
-              <TryOnCanvas userImage={userImage} tryOnResult={tryOnResult} />
+              <div className="space-y-4">
+                <TryOnCanvas userImage={userImage} tryOnResult={tryOnResult} />
+                {tryOnError && (
+                  <p className="text-sm text-destructive">{tryOnError}</p>
+                )}
+              </div>
             )}
 
             {/* Outfit Builder */}
