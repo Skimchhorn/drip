@@ -16,11 +16,13 @@ export function SearchButton({
   disabled = false,
   label = "Search",
 }: SearchButtonProps) {
+  const isAskStylist = label === 'Ask Stylist';
+
   return (
     <Button
       onClick={onClick}
       disabled={disabled || loading}
-      className="px-6 h-12 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all hover:shadow-lg whitespace-nowrap"
+      className={`px-6 h-12 rounded-2xl text-sm font-semibold hover:opacity-90 transition-all hover:shadow-lg whitespace-nowrap ${isAskStylist ? 'search-button--ask' : 'bg-primary text-primary-foreground'}`}
     >
       {loading ? (
         <>

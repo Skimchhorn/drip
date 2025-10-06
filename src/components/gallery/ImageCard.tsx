@@ -53,7 +53,7 @@ export function ImageCard({ image, onImageClick, onLikeToggle }: ImageCardProps)
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
           transition={{ duration: 0.3 }}
-          className="absolute bottom-0 left-0 right-0 p-4 text-white"
+          className="absolute bottom-0 left-0 right-0 p-4 text-white image-overlay"
         >
           <h3 className="mb-2">{image.title}</h3>
           <div className="flex flex-wrap gap-2">
@@ -90,7 +90,7 @@ export function ImageCard({ image, onImageClick, onLikeToggle }: ImageCardProps)
         </motion.button>
 
         {/* Like count */}
-        <div className="absolute top-4 left-4 px-3 py-1 rounded-lg bg-black/60 text-white backdrop-blur-sm shadow-sm">
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm shadow-sm like-count">
           <span className="text-sm font-medium">{image.likes}</span>
         </div>
       </div>
