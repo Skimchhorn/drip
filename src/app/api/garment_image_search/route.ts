@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import { getGoogleSearchKey, getGarmentSearchId } from "@/lib/key-rotation";
+
+// Initialize Upstash Redis client (free alternative to Vercel KV)
+const kv = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

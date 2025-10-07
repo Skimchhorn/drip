@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import { mockGalleryImages } from "@/lib/mockData";
 import { getGoogleSearchKey, getStyleSearchId } from "@/lib/key-rotation";
 
+// Initialize Upstash Redis client (free alternative to Vercel KV)
+const kv = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
+
 /**
- * Style Search API with Vercel KV Caching + API Key Rotation
+ * Style Search API with Upstash Redis Caching + API Key Rotation
  *
  * Searches for style images using Google Custom Search API with STYLE_SEARCH_ID.
- * Uses Vercel KV as a caching layer to prevent rate limits and reduce API calls.
+ * Uses Upstash Redis as a caching layer to prevent rate limits and reduce API calls.
  * Rotates between multiple API keys to distribute load and avoid per-key rate limits.
  *
  * REQUEST:
