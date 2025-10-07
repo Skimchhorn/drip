@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { kv } from "@vercel/kv";
+import { getGoogleSearchKey, getGarmentSearchId } from "@/lib/key-rotation";
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const CACHE_TTL = 3600; // 1 hour
+
 /**
- * Garment Image Search API
+ * Garment Image Search API with KV Caching + Key Rotation
  *
  * Searches for garment images using Google Custom Search API with a direct keyword.
  * This endpoint is used after receiving keywords from Gemini (gemini_keywords_from_image or gemini_keywords_from_text).
+ * Uses Vercel KV caching and API key rotation to prevent rate limits.
  *
  * REQUEST:
  *   Method: GET
@@ -20,17 +25,8 @@ export const dynamic = 'force-dynamic';
  *   {
  *     "keyword": "blue denim jacket men",
  *     "total": 4,
- *     "images": [
- *       {
- *         "title": "Image title",
- *         "url": "https://example.com/image.jpg",
- *         "thumb": "https://example.com/thumb.jpg",
- *         "pageUrl": "https://example.com/page",
- *         "width": 1920,
- *         "height": 1080,
- *         "mime": "image/jpeg"
- *       }
- *     ]
+ *     "images": [...],
+ *     "cached": true/false
  *   }
  *
  *   Error (400):
@@ -44,9 +40,29 @@ export async function GET(req: NextRequest) {
 
   const num = req.nextUrl.searchParams.get("num") ?? "4";
 
+  // Create cache key
+  const cacheKey = `garment_image:${keyword}:${num}`;
+
+  // Check KV cache first
+  try {
+    const cached = await kv.get(cacheKey);
+    if (cached) {
+      console.log(`[KV Cache HIT] ${cacheKey}`);
+      return NextResponse.json({ ...cached, cached: true });
+    }
+    console.log(`[KV Cache MISS] ${cacheKey}`);
+  } catch (kvError) {
+    console.warn('[KV Get Error]', kvError);
+    // Continue without cache
+  }
+
+  // Use rotated keys
+  const googleKey = getGoogleSearchKey();
+  const garmentId = getGarmentSearchId();
+
   const params = new URLSearchParams({
-    key: process.env.GOOGLE_SEARCH_API_KEY!,
-    cx: process.env.GARMENT_SEARCH_ID!,
+    key: googleKey,
+    cx: garmentId,
     q: keyword,
     searchType: "image",
     num,
@@ -70,11 +86,22 @@ export async function GET(req: NextRequest) {
       mime: it.mime ?? it.image?.mime ?? null
     }));
 
-    return NextResponse.json({
+    const responseData = {
       keyword,
       total: images.length,
       images
-    });
+    };
+
+    // Cache the response
+    try {
+      await kv.set(cacheKey, responseData, { ex: CACHE_TTL });
+      console.log(`[KV Cache SET] ${cacheKey} (TTL: ${CACHE_TTL}s)`);
+    } catch (kvError) {
+      console.warn('[KV Set Error]', kvError);
+      // Continue without caching
+    }
+
+    return NextResponse.json({ ...responseData, cached: false });
   } catch (err: any) {
     return NextResponse.json(
       { error: 'Garment image search failed', details: String(err?.message || err) },

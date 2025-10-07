@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGemini, promptForGarmentSuggestions, corsHeaders } from "@/lib/gemini";
 import { requireQueryParam } from "@/lib/api-utils";
+import { kv } from "@vercel/kv";
+import { getGoogleSearchKey, getGarmentSearchId } from "@/lib/key-rotation";
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const CACHE_TTL = 3600; // 1 hour
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -68,6 +72,22 @@ export async function GET(req: NextRequest) {
     const styleReference = requireQueryParam(url, 'styleReference');
     const num = url.searchParams.get("num") ?? "10";
 
+    // Create cache key
+    const cacheKey = `garment_search:${styleReference}:${num}`;
+
+    // Check KV cache first
+    try {
+      const cached = await kv.get(cacheKey);
+      if (cached) {
+        console.log(`[KV Cache HIT] ${cacheKey}`);
+        return NextResponse.json({ ...cached, cached: true }, { headers: corsHeaders() });
+      }
+      console.log(`[KV Cache MISS] ${cacheKey}`);
+    } catch (kvError) {
+      console.warn('[KV Get Error]', kvError);
+      // Continue without cache
+    }
+
     // Step 1: Call Gemini API with style reference
     const ai = getGemini();
     const prompt = promptForGarmentSuggestions(styleReference);
@@ -96,16 +116,20 @@ export async function GET(req: NextRequest) {
     const garmentSuggestions = geminiResponse.garment_suggestion;
     const garmentResults: Record<string, any[]> = {};
 
+    // Use rotated keys for all garment searches
+    const googleKey = getGoogleSearchKey();
+    const garmentId = getGarmentSearchId();
+
     for (const [key, garmentName] of Object.entries(garmentSuggestions)) {
       if (typeof garmentName !== 'string') continue;
 
       // Construct search query: styleReference + garmentName
       const searchQuery = `${styleReference} ${garmentName}`;
 
-      // Call Google Custom Search API
+      // Call Google Custom Search API with rotated keys
       const params = new URLSearchParams({
-        key: process.env.GOOGLE_SEARCH_API_KEY!,
-        cx: process.env.GARMENT_SEARCH_ID!,
+        key: googleKey,
+        cx: garmentId,
         q: searchQuery,
         searchType: "image",
         num,
@@ -136,13 +160,24 @@ export async function GET(req: NextRequest) {
     }
 
     // Step 3: Format and return the complete response
-    return NextResponse.json({
+    const responseData = {
       score: geminiResponse.score,
       feedback: geminiResponse.feedback,
       ai_script: geminiResponse.ai_script,
       garment_suggestion: geminiResponse.garment_suggestion,
       garment_results: garmentResults
-    }, { headers: corsHeaders() });
+    };
+
+    // Cache the response
+    try {
+      await kv.set(cacheKey, responseData, { ex: CACHE_TTL });
+      console.log(`[KV Cache SET] ${cacheKey} (TTL: ${CACHE_TTL}s)`);
+    } catch (kvError) {
+      console.warn('[KV Set Error]', kvError);
+      // Continue without caching
+    }
+
+    return NextResponse.json({ ...responseData, cached: false }, { headers: corsHeaders() });
 
   } catch (err: any) {
     return NextResponse.json(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StyleImage } from '@/lib/types';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ import { StyleDetailPage } from '@/components/style/StyleDetailPage';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload } from 'lucide-react';
+import debounce from 'lodash.debounce';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<'gallery' | 'detail'>('gallery');
@@ -26,73 +27,75 @@ export default function Home() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const IMAGES_PER_BATCH = 20;
 
-  // Fetch all images from style_search endpoint with debouncing
-  useEffect(() => {
-    // Debounce search - wait 500ms after user stops typing
-    const timeoutId = setTimeout(() => {
-      const fetchImages = async () => {
-        try {
-          setIsLoading(true);
-          const allFetchedImages: StyleImage[] = [];
-          const query = searchQuery.trim() || 'fashion';
-          const searchId = Date.now(); // Unique ID for this search to avoid key collisions
+  // Create debounced fetch function - prevents burst requests during typing
+  const debouncedFetchImages = useCallback(
+    debounce(async (query: string) => {
+      try {
+        setIsLoading(true);
+        const allFetchedImages: StyleImage[] = [];
+        const searchQuery = query.trim() || 'fashion';
 
-          // Start with fewer requests to avoid rate limiting
-          // Make requests sequentially with delay to respect rate limits
-          const maxRequests = 3; // Reduced from 10 to 3
+        // Start with fewer requests to avoid rate limiting
+        // Make requests sequentially with delay to respect rate limits
+        const maxRequests = 3; // Reduced from 10 to 3
 
-          for (let i = 0; i < maxRequests; i++) {
-            const start = i * 10 + 1;
+        for (let i = 0; i < maxRequests; i++) {
+          const start = i * 10 + 1;
 
-            try {
-              const response = await fetch(`/api/style_search?q=${encodeURIComponent(query)}&num=10&start=${start}`);
-              const data = await response.json();
+          try {
+            const response = await fetch(`/api/style_search?q=${encodeURIComponent(searchQuery)}&num=10&start=${start}`);
+            const data = await response.json();
 
-              if (response.ok && data.images) {
-                const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-                  id: `img-${start + index}`,
-                  title: img.title || 'Fashion Style',
-                  imageUrl: img.url,
-                  tags: ['fashion', 'style'],
-                  likes: Math.floor(Math.random() * 500),
-                  isLiked: false,
-                }));
-                allFetchedImages.push(...transformedImages);
-              } else if (response.status === 429) {
-                // Hit rate limit, stop making more requests
-                console.warn('Rate limit reached, stopping requests');
-                break;
-              }
-
-              // Add small delay between requests to avoid rate limiting
-              if (i < maxRequests - 1) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
-            } catch (error) {
-              console.error(`Failed to fetch batch ${i + 1}:`, error);
+            if (response.ok && data.images) {
+              const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
+                id: `img-${start + index}`,
+                title: img.title || 'Fashion Style',
+                imageUrl: img.url,
+                tags: ['fashion', 'style'],
+                likes: Math.floor(Math.random() * 500),
+                isLiked: false,
+              }));
+              allFetchedImages.push(...transformedImages);
+            } else if (response.status === 429) {
+              // Hit rate limit, stop making more requests
+              console.warn('Rate limit reached, stopping requests');
               break;
             }
+
+            // Add small delay between requests to avoid rate limiting
+            if (i < maxRequests - 1) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          } catch (error) {
+            console.error(`Failed to fetch batch ${i + 1}:`, error);
+            break;
           }
-
-          console.log('Total images fetched:', allFetchedImages.length);
-          setAllImages(allFetchedImages);
-          // Load first batch
-          setDisplayedImages(allFetchedImages.slice(0, IMAGES_PER_BATCH));
-          setCurrentIndex(IMAGES_PER_BATCH);
-          console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', allFetchedImages.length);
-        } catch (error) {
-          console.error('Failed to fetch images:', error);
-        } finally {
-          setIsLoading(false);
         }
-      };
 
-      fetchImages();
-    }, 500); // Wait 500ms after user stops typing
+        console.log('Total images fetched:', allFetchedImages.length);
+        setAllImages(allFetchedImages);
+        // Load first batch
+        setDisplayedImages(allFetchedImages.slice(0, IMAGES_PER_BATCH));
+        setCurrentIndex(IMAGES_PER_BATCH);
+        console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', allFetchedImages.length);
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 800), // 800ms debounce - waits for user to finish typing
+    []
+  );
 
-    // Cleanup timeout if search query changes before timeout completes
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  // Trigger debounced fetch when search query changes
+  useEffect(() => {
+    debouncedFetchImages(searchQuery);
+
+    // Cleanup: cancel pending debounced calls on unmount
+    return () => {
+      debouncedFetchImages.cancel();
+    };
+  }, [searchQuery, debouncedFetchImages]);
 
   const loadMoreImages = () => {
     if (currentIndex >= allImages.length || isLoadingMore) {
