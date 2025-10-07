@@ -32,7 +32,7 @@ export function ProductCarousel({ products, onTryOn, loadingProductId }: Product
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
-                <Badge className="absolute top-2 right-2">
+                <Badge className="absolute top-2 right-2 bg-black/80 !text-white border-none">
                   {product.brand}
                 </Badge>
               </div>

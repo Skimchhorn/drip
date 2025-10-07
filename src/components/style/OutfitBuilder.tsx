@@ -43,7 +43,7 @@ function DraggableProduct({ product }: DraggableProductProps) {
             className="w-full h-full object-cover"
           />
         </div>
-        <p className="line-clamp-1">{product.brand}</p>
+        <p className="line-clamp-1 !text-white font-medium">{product.brand}</p>
       </Card>
     </div>
   );
