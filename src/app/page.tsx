@@ -25,7 +25,7 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const IMAGES_PER_BATCH = 20;
+  const IMAGES_PER_BATCH = 25; // Load 25 images per scroll
 
   // Create debounced fetch function - prevents burst requests during typing
   const debouncedFetchImages = useCallback(
@@ -34,10 +34,11 @@ export default function Home() {
         setIsLoading(true);
         const allFetchedImages: StyleImage[] = [];
         const searchQuery = query.trim() || 'fashion';
+        const searchTimestamp = Date.now(); // Unique timestamp for this search
 
-        // Start with fewer requests to avoid rate limiting
-        // Make requests sequentially with delay to respect rate limits
-        const maxRequests = 3; // Reduced from 10 to 3
+        // Fetch more images initially to support infinite scroll
+        // Increase to 10 requests for 100 total images
+        const maxRequests = 10; // 10 batches × 10 images = 100 images
 
         for (let i = 0; i < maxRequests; i++) {
           const start = i * 10 + 1;
@@ -48,7 +49,7 @@ export default function Home() {
 
             if (response.ok && data.images) {
               const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-                id: `img-${start + index}`,
+                id: `img-${searchTimestamp}-${start + index}-${Math.random().toString(36).substr(2, 9)}`,
                 title: img.title || 'Fashion Style',
                 imageUrl: img.url,
                 tags: ['fashion', 'style'],
@@ -103,38 +104,41 @@ export default function Home() {
       return;
     }
 
-    console.log('Loading more images from index:', currentIndex);
+    console.log(`Loading next 25 images from index ${currentIndex}...`);
     setIsLoadingMore(true);
+    
     // Simulate loading delay for better UX
     setTimeout(() => {
       const nextBatch = allImages.slice(currentIndex, currentIndex + IMAGES_PER_BATCH);
-      console.log('Loading batch:', nextBatch.length, 'images');
+      console.log(`Loaded ${nextBatch.length} new images. Total displayed: ${displayedImages.length + nextBatch.length}`);
       setDisplayedImages(prev => [...prev, ...nextBatch]);
       setCurrentIndex(prev => prev + IMAGES_PER_BATCH);
       setIsLoadingMore(false);
     }, 300);
   };
 
-  // Infinite scroll handler
+  // Infinite scroll handler - loads more images when user hits bottom
   useEffect(() => {
     if (currentPage !== 'gallery') return;
 
     const handleScroll = () => {
+      // Don't load if already loading or no more images
       if (isLoadingMore || currentIndex >= allImages.length) return;
 
       const scrollHeight = document.documentElement.scrollHeight;
       const scrollTop = document.documentElement.scrollTop;
       const clientHeight = document.documentElement.clientHeight;
 
-      // Load more when user is near bottom (200px from bottom)
-      if (scrollTop + clientHeight >= scrollHeight - 200) {
+      // Load more when user hits the bottom (within 50px threshold)
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        console.log('Bottom reached! Loading 25 more images...');
         loadMoreImages();
       }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  });
+  }, [currentPage, isLoadingMore, currentIndex, allImages.length]);
 
   // No longer need to filter - images are fetched based on search query
   const filteredImages = displayedImages;
