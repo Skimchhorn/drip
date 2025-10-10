@@ -1,80 +1,187 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 👗 Drip - AI-Powered Virtual Try-On & Fashion Discovery Platform
 
-## Getting Started
+*Your personal AI stylist that transforms fashion inspiration into shoppable reality*
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)
+![React](https://img.shields.io/badge/React-19.1-61DAFB?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript)
+![TailwindCSS](https://img.shields.io/badge/Tailwind-4.1-38B2AC?style=for-the-badge&logo=tailwind-css)
+![Google AI](https://img.shields.io/badge/Google_AI-Gemini-4285F4?style=for-the-badge&logo=google)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌟 Overview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Drip is an intelligent fashion discovery platform that bridges the gap between style inspiration and reality. Upload a fashion image or search for styles, and let AI identify every piece of clothing, find similar products from real retailers, and virtually try them on using your own photo.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Key Technical Features:**
+- **AI-Powered Garment Detection** using Google Gemini Vision API for multi-modal image analysis
+- **Real-time Virtual Try-On** with Fashn.ai integration and progressive image rendering
+- **Intelligent Product Search** across ASOS and custom search engines with rate-limit handling
+- **Progressive Image Loading** with infinite scroll and optimized batch processing
+- **Responsive Masonry Layout** using Framer Motion animations and React DnD
 
-## 🚀 Vercel KV Caching Setup (Required for Production)
+---
 
-This project uses **Vercel KV** to cache API responses and prevent rate limit errors (429).
+## 🛠️ Tech Stack
 
-### Quick Setup (5 minutes)
-See **[QUICK_START.md](./QUICK_START.md)** for fast setup instructions.
+**Frontend:** Next.js 15.5 (App Router), React 19, TypeScript, TailwindCSS 4.1, Framer Motion
+**UI Components:** Radix UI, Shadcn/ui, Lucide React, Sonner
+**AI/ML:** Google Gemini API, Fashn.ai Virtual Try-On API
+**APIs:** Google Custom Search API, ASOS API, ImgBB Image Hosting
+**State Management:** React Hooks, Client-side caching
 
-### Detailed Documentation
-- **[VERCEL_KV_SETUP.md](./VERCEL_KV_SETUP.md)** - Complete setup guide
-- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Technical details
-- **[CACHE_FLOW.md](./CACHE_FLOW.md)** - Architecture & flow diagrams
-- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Step-by-step deployment
+---
 
-### Why KV Caching?
-- ✅ **Prevents 429 Rate Limits**: Caches API responses to avoid repeated external API calls
-- ✅ **10-20x Faster**: Cached responses in <100ms vs 500-1000ms API calls
-- ✅ **95% Cost Reduction**: Dramatically reduces external API usage
-- ✅ **Zero Downtime**: Serves stale cache or mock data when API fails
-- ✅ **Free Tier Available**: 256MB storage, 30K commands/month
+## 🚀 Installation & Setup
+
+### Prerequisites
+- Node.js 18+ and npm/yarn
+- Google Cloud API Key (for Gemini AI)
+- Google Custom Search API credentials
+- Fashn.ai API Key
+- ImgBB API Key
 
 ### Environment Variables
-
-Copy `.env.example` to `.env.local` and add your credentials:
+Create a `.env.local` file in the root directory:
 
 ```bash
-cp .env.example .env.local
+GOOGLE_API_KEY=your_google_api_key
+GOOGLE_SEARCH_API_KEY=your_search_api_key
+STYLE_SEARCH_ID=your_style_search_engine_id
+GARMENT_SEARCH_ID=your_garment_search_engine_id
+FASHN_API_KEY=your_fashn_api_key
+IMGBB_API_KEY=your_imgbb_api_key
 ```
 
-Required variables:
-```env
-# Google Custom Search
-GOOGLE_SEARCH_API_KEY=your_api_key
-STYLE_SEARCH_ID=your_search_engine_id
+### Installation
 
-# Vercel KV (auto-added when you connect KV in Vercel)
-KV_URL=...
-KV_REST_API_URL=...
-KV_REST_API_TOKEN=...
-KV_REST_API_READ_ONLY_TOKEN=...
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/drip.git
+cd drip
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 How to Use
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Browse Fashion Inspiration**
+   - Search for styles using keywords (e.g., "streetwear", "minimalist fashion")
+   - Browse the infinite-scrolling gallery of curated fashion images
+   - Click any style that catches your eye
 
-## Deploy on Vercel
+2. **AI Garment Analysis**
+   - The app automatically analyzes the selected image using Gemini Vision API
+   - Detects clothing items (tops, bottoms, outerwear, shoes)
+   - Extracts style attributes, colors, and garment types
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Shop Similar Products**
+   - View AI-suggested products from real retailers matching the detected garments
+   - Products load progressively as the API processes each garment
+   - Browse brand names, prices, and direct retailer links
 
-**Important**: Before deploying, set up Vercel KV to prevent rate limit errors. See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md).
+4. **Virtual Try-On**
+   - Upload your own photo using the camera/upload feature
+   - Select any product from the carousel
+   - Watch the AI generate a realistic virtual try-on result
+   - Save your try-on history for comparison
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. **Upload Custom Styles**
+   - Click "Upload Style" to analyze your own fashion inspiration photos
+   - Get instant AI-powered garment detection and product recommendations
 
+---
+
+## 📂 Project Structure
+
+```
+📁 src/
+├── 📁 app/                     # Next.js App Router
+│   ├── 📁 api/                 # API routes
+│   │   ├── 📁 fashAI/          # Virtual try-on endpoint
+│   │   ├── 📁 gemini_*/        # Gemini AI integrations
+│   │   ├── 📁 style_search/    # Fashion image search
+│   │   └── 📁 garment_search/  # Product search
+│   ├── layout.tsx              # Root layout with providers
+│   └── page.tsx                # Main gallery page
+├── 📁 components/
+│   ├── 📁 gallery/             # Image grid & search UI
+│   ├── 📁 style/               # Style detail & try-on components
+│   ├── 📁 ui/                  # Reusable Shadcn components
+│   └── 📁 figma/               # Design system components
+├── 📁 lib/
+│   ├── types.ts                # TypeScript interfaces
+│   ├── mockData.ts             # Data utilities & transformers
+│   └── utils.ts                # Helper functions
+├── 📁 styles/                  # Global CSS and theme
+└── 📁 public/                  # Static assets & images
+```
+
+---
+
+## 💡 Technical Highlights
+
+### 🤖 AI-Powered Image Analysis
+- **Multi-Modal Processing**: Leverages Google Gemini's vision capabilities to extract garment metadata from images
+- **Progressive Updates**: Real-time UI updates as each garment detection completes
+- **Keyword Extraction**: Intelligent text and image-based keyword generation for accurate product matching
+
+### 🔍 Intelligent Search & Rate Limiting
+- **Debounced Search**: 500ms delay prevents excessive API calls during user typing
+- **Rate Limit Handling**: Graceful degradation with 429 error detection and request batching
+- **Infinite Scroll**: Lazy-loaded image batches (20 at a time) for optimal performance
+
+### 🎨 Virtual Try-On Pipeline
+- **Image Upload Flow**: Base64 encoding → ImgBB hosting → Fashn.ai processing
+- **Polling Mechanism**: Asynchronous job status checks with 3-second intervals (max 30s timeout)
+- **Error Recovery**: Comprehensive error handling for upload failures and timeout scenarios
+
+### ⚡ Performance Optimizations
+- **Next.js 15 Turbopack**: Lightning-fast development builds
+- **Image Optimization**: Next.js Image component with lazy loading and responsive sizing
+- **Client-Side Caching**: Local state management reduces redundant API calls
+- **Framer Motion**: Hardware-accelerated animations with AnimatePresence
+
+### 🎯 State Management Architecture
+- **React Hooks Pattern**: useState, useEffect, useMemo for reactive UI updates
+- **History Tracking**: Try-on results stored with timestamps and product metadata
+- **Optimistic Updates**: Immediate UI feedback with background API synchronization
+
+---
+
+## 🔮 Future Enhancements
+
+- [ ] User authentication and personalized style profiles
+- [ ] Social sharing for try-on results and outfit compositions
+- [ ] Advanced filters (price range, brand preferences, size availability)
+- [ ] AR-powered live camera try-on (WebXR integration)
+- [ ] Outfit builder with mix-and-match functionality
+- [ ] Price tracking and sale notifications
+- [ ] Multi-language support and global retailer integration
+- [ ] Machine learning-based style recommendations
+- [ ] Collaborative mood boards and style collections
+
+---
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+**Built with ❤️ using Next.js, TypeScript, and cutting-edge AI technology**
