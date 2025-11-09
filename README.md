@@ -14,6 +14,8 @@
 
 Drip is an intelligent fashion discovery platform that bridges the gap between style inspiration and reality. Upload a fashion image or search for styles, and let AI identify every piece of clothing, find similar products from real retailers, and virtually try them on using your own photo.
 
+Devpost: https://devpost.com/software/drip-ai-ctkq6e
+
 **Key Technical Features:**
 - **AI-Powered Garment Detection** using Google Gemini Vision API for multi-modal image analysis
 - **Real-time Virtual Try-On** with Fashn.ai integration and progressive image rendering
