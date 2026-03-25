@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StyleImage } from '@/lib/types';
 import Image from 'next/image';
@@ -12,91 +12,35 @@ import { StyleDetailPage } from '@/components/style/StyleDetailPage';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload } from 'lucide-react';
-import debounce from 'lodash.debounce';
+import { mockGalleryImages } from '@/lib/mockData';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<'gallery' | 'detail'>('gallery');
   const [selectedImage, setSelectedImage] = useState<StyleImage | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [allImages, setAllImages] = useState<StyleImage[]>([]);
-  const [displayedImages, setDisplayedImages] = useState<StyleImage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [allImages, setAllImages] = useState<StyleImage[]>(mockGalleryImages);
+  const [displayedImages, setDisplayedImages] = useState<StyleImage[]>(mockGalleryImages.slice(0, 25));
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(25);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const IMAGES_PER_BATCH = 25; // Load 25 images per scroll
 
-  // Create debounced fetch function - prevents burst requests during typing
-  const debouncedFetchImages = useCallback(
-    debounce(async (query: string) => {
-      try {
-        setIsLoading(true);
-        const allFetchedImages: StyleImage[] = [];
-        const searchQuery = query.trim() || 'fashion';
-        const searchTimestamp = Date.now(); // Unique timestamp for this search
-
-        // Fetch more images initially to support infinite scroll
-        // Increase to 10 requests for 100 total images
-        const maxRequests = 10; // 10 batches × 10 images = 100 images
-
-        for (let i = 0; i < maxRequests; i++) {
-          const start = i * 10 + 1;
-
-          try {
-            const response = await fetch(`/api/style_search?q=${encodeURIComponent(searchQuery)}&num=10&start=${start}`);
-            const data = await response.json();
-
-            if (response.ok && data.images) {
-              const transformedImages: StyleImage[] = data.images.map((img: any, index: number) => ({
-                id: `img-${searchTimestamp}-${start + index}-${Math.random().toString(36).substr(2, 9)}`,
-                title: img.title || 'Fashion Style',
-                imageUrl: img.url,
-                tags: ['fashion', 'style'],
-                likes: Math.floor(Math.random() * 500),
-                isLiked: false,
-              }));
-              allFetchedImages.push(...transformedImages);
-            } else if (response.status === 429) {
-              // Hit rate limit, stop making more requests
-              console.warn('Rate limit reached, stopping requests');
-              break;
-            }
-
-            // Add small delay between requests to avoid rate limiting
-            if (i < maxRequests - 1) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          } catch (error) {
-            console.error(`Failed to fetch batch ${i + 1}:`, error);
-            break;
-          }
-        }
-
-        console.log('Total images fetched:', allFetchedImages.length);
-        setAllImages(allFetchedImages);
-        // Load first batch
-        setDisplayedImages(allFetchedImages.slice(0, IMAGES_PER_BATCH));
-        setCurrentIndex(IMAGES_PER_BATCH);
-        console.log('Displayed initial batch:', IMAGES_PER_BATCH, 'Total available:', allFetchedImages.length);
-      } catch (error) {
-        console.error('Failed to fetch images:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 800), // 800ms debounce - waits for user to finish typing
-    []
-  );
-
-  // Trigger debounced fetch when search query changes
+  // Filter local mock images immediately on search changes.
   useEffect(() => {
-    debouncedFetchImages(searchQuery);
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const filtered = normalizedQuery
+      ? mockGalleryImages.filter((image) => {
+          const searchable = `${image.title} ${image.tags.join(' ')}`.toLowerCase();
+          return searchable.includes(normalizedQuery);
+        })
+      : mockGalleryImages;
 
-    // Cleanup: cancel pending debounced calls on unmount
-    return () => {
-      debouncedFetchImages.cancel();
-    };
-  }, [searchQuery, debouncedFetchImages]);
+    setAllImages(filtered);
+    setDisplayedImages(filtered.slice(0, IMAGES_PER_BATCH));
+    setCurrentIndex(IMAGES_PER_BATCH);
+  }, [searchQuery]);
 
   const loadMoreImages = () => {
     if (currentIndex >= allImages.length || isLoadingMore) {
@@ -104,17 +48,12 @@ export default function Home() {
       return;
     }
 
-    console.log(`Loading next 25 images from index ${currentIndex}...`);
     setIsLoadingMore(true);
-    
-    // Simulate loading delay for better UX
-    setTimeout(() => {
-      const nextBatch = allImages.slice(currentIndex, currentIndex + IMAGES_PER_BATCH);
-      console.log(`Loaded ${nextBatch.length} new images. Total displayed: ${displayedImages.length + nextBatch.length}`);
-      setDisplayedImages(prev => [...prev, ...nextBatch]);
-      setCurrentIndex(prev => prev + IMAGES_PER_BATCH);
-      setIsLoadingMore(false);
-    }, 300);
+
+    const nextBatch = allImages.slice(currentIndex, currentIndex + IMAGES_PER_BATCH);
+    setDisplayedImages(prev => [...prev, ...nextBatch]);
+    setCurrentIndex(prev => prev + IMAGES_PER_BATCH);
+    setIsLoadingMore(false);
   };
 
   // Infinite scroll handler - loads more images when user hits bottom
@@ -131,7 +70,6 @@ export default function Home() {
 
       // Load more when user hits the bottom (within 50px threshold)
       if (scrollTop + clientHeight >= scrollHeight - 50) {
-        console.log('Bottom reached! Loading 25 more images...');
         loadMoreImages();
       }
     };
